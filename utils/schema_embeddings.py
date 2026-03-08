@@ -1,10 +1,6 @@
-
-## 3. Schema Embeddings Utility (`utils/schema_embeddings.py`)
-```python
 import sqlite3
 import chromadb
 from chromadb.utils import embedding_functions
-from sentence_transformers import SentenceTransformer
 import json
 import os
 

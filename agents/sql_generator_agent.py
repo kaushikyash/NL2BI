@@ -11,11 +11,10 @@ class SQLGeneratorAgent:
         if settings.LLM_BASE_URL:
             openai.api_base = settings.LLM_BASE_URL
     
-    async def generate_sql(self, question: str, full_schema: str, context: str) -> Dict[str, Any]:
+    async def generate_sql(self, question: str, context: str) -> Dict[str, Any]:
         """Generate SQL using RAG + few-shot prompting"""
         
         prompt = TEXT2SQL_PROMPT.format(
-            schema=full_schema,
             context=context,
             question=question
         )

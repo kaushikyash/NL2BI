@@ -19,17 +19,15 @@ class Text2SQLPipeline:
         """Complete RAG pipeline: retrieve -> generate SQL"""
         
         # Step 1: Retrieve relevant schema
-        retrieval_result = self.retriever.retrieve(question)
+        retrieval_result = self.retriever.retrieve_relevant_tables(question)
+    
+        print(f"Retrieved {retrieval_result['table_count']}/{retrieval_result['top_k_searched']} tables")
+        print("Context preview:", retrieval_result['context'][:200])
         
         # Step 2: Generate SQL
         generation_result = await self.sql_generator.generate_sql(
             question=question,
-            full_schema=self.full_schema,
             context=retrieval_result["context"]
         )
         
-        return {
-            **generation_result,
-            "retrieval": retrieval_result,
-            "full_schema": self.full_schema[:1000] + "..."
-        }
+        return generation_result
