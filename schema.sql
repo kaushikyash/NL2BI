@@ -1,11 +1,9 @@
-CREATE DATABASE manufacturing_dw
-ENGINE = Atomic
-COMMENT 'Manufacturing data warehouse for production, inventory, procurement, quality, and shipments';
+CREATE DATABASE manufacturing_dw ENGINE = Atomic COMMENT 'Manufacturing data warehouse for production, inventory, procurement, quality, and shipments';
+    `term_type` String COMMENT 'Type of canonical term such as table, column, dimension, measure, kpi, filter_value, business_term, or abbreviation',
 
 CREATE TABLE manufacturing_dw.ai_business_synonyms (
     `synonym` String COMMENT 'Word or phrase a user may type in natural language, such as factory, FG, vendor, or stock on hand',
     `canonical_term` String COMMENT 'Standard business term the synonym should map to, such as plant, finished_good, supplier, or inventory_on_hand',
-    `term_type` String COMMENT 'Type of canonical term such as table, column, dimension, measure, kpi, filter_value, business_term, or abbreviation',
     `target_table` String COMMENT 'Primary physical table related to the canonical term; blank when not applicable',
     `target_column` String COMMENT 'Primary physical column related to the canonical term; blank when not applicable',
     `target_value` String COMMENT 'Suggested filter value or business value when the synonym refers to a specific coded meaning',
@@ -15,7 +13,7 @@ CREATE TABLE manufacturing_dw.ai_business_synonyms (
     `is_active` UInt8 COMMENT 'Flag indicating whether this synonym is currently active and should be used by the AI'
 )
 ENGINE = MergeTree
-ORDER BY (lower(synonym), term_type, target_table, target_column)
+ORDER BY (lower(synonym), target_table, target_column)
 SETTINGS index_granularity = 8192
 COMMENT 'Business synonym and vocabulary mapping table used by AI to translate user language into manufacturing warehouse schema terms';
 
@@ -391,6 +389,12 @@ ORDER BY (database_name, table_name)
 SETTINGS index_granularity = 8192
 COMMENT 'Registry table containing table-level business descriptions for the warehouse';
 
+ALTER TABLE manufacturing_dw.ai_business_synonyms
+ADD COLUMN term_type String
+COMMENT 'Type of synonym mapping such as entity, metric, attribute, filter_value, or abbreviation'
+AFTER synonym;
+
+
 CREATE VIEW manufacturing_dw.v_ai_business_synonyms AS
 SELECT
     synonym,
@@ -406,10 +410,12 @@ SELECT
 FROM manufacturing_dw.ai_business_synonyms
 WHERE is_active = 1;
 
+
 CREATE VIEW manufacturing_dw.v_ai_questions AS
 SELECT *
 FROM manufacturing_dw.ai_example_questions
 ORDER BY domain ASC, question_text ASC;
+
 
 CREATE VIEW manufacturing_dw.v_ai_semantic_catalog AS
 SELECT
@@ -438,6 +444,7 @@ LEFT JOIN manufacturing_dw.table_ai_context AS a ON (c.database = a.database_nam
 WHERE c.database = 'manufacturing_dw'
 ORDER BY c.table ASC, c.position ASC;
 
+
 CREATE VIEW manufacturing_dw.v_ai_sql_templates AS
 SELECT
     template_name,
@@ -459,6 +466,7 @@ SELECT
 FROM manufacturing_dw.ai_sql_templates
 WHERE is_active = 1;
 
+
 CREATE VIEW manufacturing_dw.v_ai_sql_templates_summary AS
 SELECT
     template_category,
@@ -473,6 +481,7 @@ FROM manufacturing_dw.ai_sql_templates
 WHERE is_active = 1
 ORDER BY template_category ASC, template_name ASC;
 
+
 CREATE VIEW manufacturing_dw.v_ai_synonyms_by_column AS
 SELECT
     target_table,
@@ -483,6 +492,7 @@ FROM manufacturing_dw.ai_business_synonyms
 WHERE (is_active = 1) AND (target_table != '') AND (target_column != '')
 GROUP BY target_table, target_column;
 
+
 CREATE VIEW manufacturing_dw.v_ai_synonyms_by_table AS
 SELECT
     target_table,
@@ -491,6 +501,7 @@ SELECT
 FROM manufacturing_dw.ai_business_synonyms
 WHERE (is_active = 1) AND (target_table != '')
 GROUP BY target_table;
+
 
 CREATE VIEW manufacturing_dw.v_ai_vocabulary_catalog AS
 SELECT
@@ -511,6 +522,8 @@ FROM manufacturing_dw.ai_business_synonyms AS s
 LEFT JOIN manufacturing_dw.table_ai_context AS tc ON (s.target_table = tc.table_name) AND (tc.database_name = 'manufacturing_dw')
 WHERE s.is_active = 1;
 
+
+
 CREATE VIEW manufacturing_dw.v_data_dictionary AS
 SELECT
     c.database AS database_name,
@@ -525,10 +538,14 @@ LEFT JOIN manufacturing_dw.table_descriptions AS td ON (c.database = td.database
 WHERE c.database = 'manufacturing_dw'
 ORDER BY table_name ASC, column_position ASC;
 
+
+
 CREATE VIEW manufacturing_dw.v_kpi_catalog AS
 SELECT *
 FROM manufacturing_dw.kpi_definitions
 ORDER BY kpi_category ASC, kpi_name ASC;
+
+
 
 CREATE VIEW manufacturing_dw.v_table_catalog AS
 SELECT
