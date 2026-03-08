@@ -1,0 +1,15 @@
+{
+  "id": "msg_image_002",
+  "type": "image",
+  "sender": "assistant",
+  "timestamp": "2026-03-07T20:20:00Z",
+  "content": {
+    "text": "Here's a generated dashboard mockup for your AI analytics project:",
+    "image": {
+      "url": "data:image/png;base64,https://www.shutterstock.com/image-vector/happy-robot-3d-ai-character-600nw-2464455965.jpg", 
+      "alt": "AI Analytics Dashboard Mockup",
+      "width": 800,
+      "height": 450
+    }
+  }
+}

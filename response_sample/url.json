@@ -1,0 +1,11 @@
+{
+  "id": "msg_link_003",
+  "type": "link",
+  "sender": "assistant",
+  "timestamp": "2026-03-07T20:21:00Z",
+  "content": {
+    "text": "Full BI dashboard available here for deeper analysis:",
+    "url": "https://bi-demo.looker.com/dashboards/1",
+    "urlLabel": "View Sales Dashboard"
+  }
+}

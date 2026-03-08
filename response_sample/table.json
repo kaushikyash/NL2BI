@@ -1,0 +1,18 @@
+{
+  "id": "msg_table_004",
+  "type": "table",
+  "sender": "assistant",
+  "timestamp": "2026-03-07T20:22:00Z",
+  "content": {
+    "text": "API performance metrics from your last deployment:",
+    "table": {
+      "headers": ["Endpoint", "Avg Response (ms)", "Error Rate", "Throughput"],
+      "rows": [
+        ["POST /api/chat", "127", "0.2%", "45 req/s"],
+        ["GET /api/models", "89", "0.1%", "112 req/s"],
+        ["POST /api/generate", "342", "1.1%", "23 req/s"],
+        ["GET /api/status", "45", "0.0%", "89 req/s"]
+      ]
+    }
+  }
+}

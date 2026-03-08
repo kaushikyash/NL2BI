@@ -1,0 +1,9 @@
+{
+  "id": "msg_text_001",
+  "type": "text",
+  "sender": "assistant",
+  "timestamp": "2026-03-07T20:19:00Z",
+  "content": {
+    "text": "Here's a simple text response with some developer context about your AI project."
+  }
+}
