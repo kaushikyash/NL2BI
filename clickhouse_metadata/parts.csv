@@ -1,0 +1,8 @@
+database,table,partition,part_name,active,rows,bytes_on_disk,data_compressed_bytes,data_uncompressed_bytes,marks,modification_time,remove_time
+manufacturing_dw,ai_business_synonyms,tuple(),all_1_1_0,1,107,8997,7974,19232,2,2026-03-07 16:12:26-07:00,1969-12-31 17:00:00-07:00
+manufacturing_dw,ai_example_questions,tuple(),all_1_1_0,1,8,2463,1703,2209,2,2026-03-07 16:05:39-07:00,1969-12-31 17:00:00-07:00
+manufacturing_dw,ai_sql_templates,tuple(),all_12_12_0,1,2,3156,1696,2176,2,2026-03-07 16:33:24-07:00,1969-12-31 17:00:00-07:00
+manufacturing_dw,ai_sql_templates,tuple(),all_1_11_2,1,34,11098,9593,36202,2,2026-03-07 16:33:24-07:00,1969-12-31 17:00:00-07:00
+manufacturing_dw,kpi_definitions,tuple(),all_1_1_0,1,15,5494,4221,8174,2,2026-03-07 16:05:39-07:00,1969-12-31 17:00:00-07:00
+manufacturing_dw,table_ai_context,tuple(),all_1_1_0,1,15,7118,5902,9686,2,2026-03-07 16:05:39-07:00,1969-12-31 17:00:00-07:00
+manufacturing_dw,table_descriptions,tuple(),all_1_1_0,1,15,1623,1161,1974,2,2026-03-07 15:57:52-07:00,1969-12-31 17:00:00-07:00

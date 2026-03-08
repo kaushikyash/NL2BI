@@ -1,0 +1,361 @@
+database,table,column_name,data_type,position,default_kind,default_expression,is_in_partition_key,is_in_sorting_key,is_in_primary_key,is_in_sampling_key,compression_codec,character_octet_length,numeric_precision,numeric_scale,datetime_precision,comment
+manufacturing_dw,ai_business_synonyms,synonym,String,1,,,0,1,1,0,,,,,,"Word or phrase a user may type in natural language, such as factory, FG, vendor, or stock on hand"
+manufacturing_dw,ai_business_synonyms,canonical_term,String,2,,,0,0,0,0,,,,,,"Standard business term the synonym should map to, such as plant, finished_good, supplier, or inventory_on_hand"
+manufacturing_dw,ai_business_synonyms,term_type,String,3,,,0,1,1,0,,,,,,"Type of canonical term such as table, column, dimension, measure, kpi, filter_value, business_term, or abbreviation"
+manufacturing_dw,ai_business_synonyms,target_table,String,4,,,0,1,1,0,,,,,,Primary physical table related to the canonical term; blank when not applicable
+manufacturing_dw,ai_business_synonyms,target_column,String,5,,,0,1,1,0,,,,,,Primary physical column related to the canonical term; blank when not applicable
+manufacturing_dw,ai_business_synonyms,target_value,String,6,,,0,0,0,0,,,,,,Suggested filter value or business value when the synonym refers to a specific coded meaning
+manufacturing_dw,ai_business_synonyms,domain,String,7,,,0,0,0,0,,,,,,"Business domain such as inventory, production, procurement, quality, shipment, bom, or general"
+manufacturing_dw,ai_business_synonyms,confidence_score,"Decimal(5, 2)",8,,,0,0,0,0,,,5.0,2.0,,Confidence score from 0 to 1 indicating how strongly this synonym maps to the canonical term
+manufacturing_dw,ai_business_synonyms,usage_note,String,9,,,0,0,0,0,,,,,,Explanation for AI on how to use the mapping in SQL generation or business interpretation
+manufacturing_dw,ai_business_synonyms,is_active,UInt8,10,,,0,0,0,0,,,8.0,0.0,,Flag indicating whether this synonym is currently active and should be used by the AI
+manufacturing_dw,ai_example_questions,domain,String,1,,,0,1,1,0,,,,,,"Business domain such as inventory, procurement, production, quality, or shipment"
+manufacturing_dw,ai_example_questions,question_text,String,2,,,0,0,0,0,,,,,,Natural-language question users may ask
+manufacturing_dw,ai_example_questions,primary_table,String,3,,,0,1,1,0,,,,,,Main table expected to answer the question
+manufacturing_dw,ai_example_questions,related_tables,String,4,,,0,0,0,0,,,,,,Comma-separated list of commonly joined supporting tables
+manufacturing_dw,ai_example_questions,expected_grouping,String,5,,,0,0,0,0,,,,,,Typical grouping or breakdown needed for the answer
+manufacturing_dw,ai_example_questions,expected_filters,String,6,,,0,0,0,0,,,,,,Typical date or business filters used in the question
+manufacturing_dw,ai_example_questions,notes,String,7,,,0,0,0,0,,,,,,Extra notes for AI prompt engineering and SQL generation
+manufacturing_dw,ai_sql_templates,template_name,String,1,,,0,1,1,0,,,,,,Unique name of the SQL template
+manufacturing_dw,ai_sql_templates,template_category,String,2,,,0,1,1,0,,,,,,"Business category such as inventory, procurement, production, quality, shipment, bom, or general"
+manufacturing_dw,ai_sql_templates,business_question,String,3,,,0,0,0,0,,,,,,Natural-language business question this template is intended to answer
+manufacturing_dw,ai_sql_templates,intent_type,String,4,,,0,0,0,0,,,,,,"Intent type such as summary, trend, ranking, detail, root_cause, or lookup"
+manufacturing_dw,ai_sql_templates,primary_table,String,5,,,0,0,0,0,,,,,,Main fact or bridge table used by the template
+manufacturing_dw,ai_sql_templates,related_tables,String,6,,,0,0,0,0,,,,,,Comma-separated list of dimension or supporting tables typically joined in the query
+manufacturing_dw,ai_sql_templates,primary_time_column,String,7,,,0,0,0,0,,,,,,Preferred time column to use for date filtering in this template
+manufacturing_dw,ai_sql_templates,grain_description,String,8,,,0,0,0,0,,,,,,Business grain expected before aggregation
+manufacturing_dw,ai_sql_templates,required_filters,String,9,,,0,0,0,0,,,,,,Comma-separated list of filters that should usually be applied
+manufacturing_dw,ai_sql_templates,optional_filters,String,10,,,0,0,0,0,,,,,,Comma-separated list of optional filters commonly used with the template
+manufacturing_dw,ai_sql_templates,grouping_columns,String,11,,,0,0,0,0,,,,,,Comma-separated list of typical grouping columns for the query
+manufacturing_dw,ai_sql_templates,measure_logic,String,12,,,0,0,0,0,,,,,,Description of the aggregation or KPI logic used in the query
+manufacturing_dw,ai_sql_templates,sql_template,String,13,,,0,0,0,0,,,,,,Parameterized SQL template for AI-generated queries
+manufacturing_dw,ai_sql_templates,result_notes,String,14,,,0,0,0,0,,,,,,Guidance on interpreting the output of the query
+manufacturing_dw,ai_sql_templates,caveats,String,15,,,0,0,0,0,,,,,,"Warnings about grain, snapshot logic, or business interpretation"
+manufacturing_dw,ai_sql_templates,is_active,UInt8,16,,,0,0,0,0,,,8.0,0.0,,Flag indicating whether the template is active and approved for AI use
+manufacturing_dw,bom_component,parent_product_key,UInt32,1,,,0,1,1,0,,,32.0,0.0,,Foreign key to dim_product for the parent assembly or finished good
+manufacturing_dw,bom_component,component_product_key,UInt32,2,,,0,1,1,0,,,32.0,0.0,,Foreign key to dim_product for the child component or raw material
+manufacturing_dw,bom_component,plant_key,UInt32,3,,,0,1,1,0,,,32.0,0.0,,Foreign key to dim_plant where this bill of material is valid
+manufacturing_dw,bom_component,bom_version,String,4,,,0,1,1,0,,,,,,Version identifier of the bill of material
+manufacturing_dw,bom_component,component_quantity,"Decimal(18, 4)",5,,,0,0,0,0,,,18.0,4.0,,Required component quantity to produce one base quantity of the parent product
+manufacturing_dw,bom_component,component_uom,String,6,,,0,0,0,0,,,,,,Unit of measure of the component quantity
+manufacturing_dw,bom_component,scrap_factor_pct,"Decimal(9, 4)",7,,,0,0,0,0,,,9.0,4.0,,Expected scrap percentage for the component in the manufacturing process
+manufacturing_dw,bom_component,valid_from,Date,8,,,0,1,1,0,,,,,0.0,Date from which the BOM component row is valid
+manufacturing_dw,bom_component,valid_to,Date,9,,,0,0,0,0,,,,,0.0,Date until which the BOM component row is valid
+manufacturing_dw,bom_component,is_current,UInt8,10,,,0,0,0,0,,,8.0,0.0,,Flag indicating whether this BOM row is currently active
+manufacturing_dw,dim_customer,customer_key,UInt32,1,,,0,1,1,0,,,32.0,0.0,,Surrogate key for the customer dimension
+manufacturing_dw,dim_customer,customer_id,String,2,,,0,0,0,0,,,,,,Business identifier of the customer from ERP or CRM
+manufacturing_dw,dim_customer,customer_name,String,3,,,0,0,0,0,,,,,,Customer legal or trading name
+manufacturing_dw,dim_customer,customer_segment,String,4,,,0,0,0,0,,,,,,"Business segment of the customer such as retail, industrial, or distributor"
+manufacturing_dw,dim_customer,country,String,5,,,0,0,0,0,,,,,,Customer country
+manufacturing_dw,dim_customer,region,String,6,,,0,0,0,0,,,,,,Customer sales region
+manufacturing_dw,dim_customer,channel,String,7,,,0,0,0,0,,,,,,"Sales channel such as direct, distributor, e-commerce, or OEM"
+manufacturing_dw,dim_customer,is_active,UInt8,8,,,0,0,0,0,,,8.0,0.0,,Flag indicating whether the customer is active
+manufacturing_dw,dim_customer,valid_from,Date,9,,,0,0,0,0,,,,,0.0,Start date when this dimension row became valid
+manufacturing_dw,dim_customer,valid_to,Date,10,,,0,0,0,0,,,,,0.0,End date when this dimension row stopped being valid
+manufacturing_dw,dim_customer,is_current,UInt8,11,,,0,0,0,0,,,8.0,0.0,,Flag indicating whether this is the current active version of the dimension row
+manufacturing_dw,dim_date,date_key,UInt32,1,,,0,1,1,0,,,32.0,0.0,,Integer date key in YYYYMMDD format
+manufacturing_dw,dim_date,full_date,Date,2,,,0,0,0,0,,,,,0.0,Calendar date
+manufacturing_dw,dim_date,year,UInt16,3,,,0,0,0,0,,,16.0,0.0,,Calendar year number
+manufacturing_dw,dim_date,quarter,UInt8,4,,,0,0,0,0,,,8.0,0.0,,Calendar quarter number from 1 to 4
+manufacturing_dw,dim_date,month,UInt8,5,,,0,0,0,0,,,8.0,0.0,,Calendar month number from 1 to 12
+manufacturing_dw,dim_date,month_name,String,6,,,0,0,0,0,,,,,,Calendar month name
+manufacturing_dw,dim_date,week_of_year,UInt8,7,,,0,0,0,0,,,8.0,0.0,,ISO week number within the year
+manufacturing_dw,dim_date,day_of_month,UInt8,8,,,0,0,0,0,,,8.0,0.0,,Day number within the month
+manufacturing_dw,dim_date,day_of_week,UInt8,9,,,0,0,0,0,,,8.0,0.0,,Day number within the week where Monday is 1 and Sunday is 7
+manufacturing_dw,dim_date,day_name,String,10,,,0,0,0,0,,,,,,Calendar day name
+manufacturing_dw,dim_date,is_weekend,UInt8,11,,,0,0,0,0,,,8.0,0.0,,Flag indicating whether the date falls on a weekend
+manufacturing_dw,dim_plant,plant_key,UInt32,1,,,0,1,1,0,,,32.0,0.0,,Surrogate key for the plant dimension
+manufacturing_dw,dim_plant,plant_id,String,2,,,0,0,0,0,,,,,,Business identifier of the plant from the source ERP or MES system
+manufacturing_dw,dim_plant,plant_name,String,3,,,0,0,0,0,,,,,,Human-readable name of the manufacturing plant
+manufacturing_dw,dim_plant,country,String,4,,,0,0,0,0,,,,,,Country where the plant is located
+manufacturing_dw,dim_plant,state_region,String,5,,,0,0,0,0,,,,,,"State, province, or region of the plant"
+manufacturing_dw,dim_plant,city,String,6,,,0,0,0,0,,,,,,City where the plant is located
+manufacturing_dw,dim_plant,timezone,String,7,,,0,0,0,0,,,,,,Local timezone used by the plant for operations and reporting
+manufacturing_dw,dim_plant,plant_type,String,8,,,0,0,0,0,,,,,,"Type of plant such as assembly, fabrication, packaging, or distribution"
+manufacturing_dw,dim_plant,is_active,UInt8,9,,,0,0,0,0,,,8.0,0.0,,"Flag indicating whether the plant is currently active; 1 means active, 0 means inactive"
+manufacturing_dw,dim_plant,valid_from,Date,10,,,0,0,0,0,,,,,0.0,Start date when this dimension row became valid
+manufacturing_dw,dim_plant,valid_to,Date,11,,,0,0,0,0,,,,,0.0,End date when this dimension row stopped being valid; use a far-future date for current row
+manufacturing_dw,dim_plant,is_current,UInt8,12,,,0,0,0,0,,,8.0,0.0,,Flag indicating whether this is the current active version of the dimension row
+manufacturing_dw,dim_product,product_key,UInt32,1,,,0,1,1,0,,,32.0,0.0,,Surrogate key for the product dimension
+manufacturing_dw,dim_product,product_id,String,2,,,0,0,0,0,,,,,,"Business identifier of the product, item, or material from ERP or PLM"
+manufacturing_dw,dim_product,product_name,String,3,,,0,0,0,0,,,,,,Human-readable name of the product or material
+manufacturing_dw,dim_product,product_type,String,4,,,0,0,0,0,,,,,,"Type of item such as raw_material, component, subassembly, finished_good, or consumable"
+manufacturing_dw,dim_product,product_family,String,5,,,0,0,0,0,,,,,,Higher-level grouping used for analytics and reporting
+manufacturing_dw,dim_product,product_category,String,6,,,0,0,0,0,,,,,,Category used by business stakeholders for planning and reporting
+manufacturing_dw,dim_product,base_uom,String,7,,,0,0,0,0,,,,,,Base unit of measure used for inventory and costing
+manufacturing_dw,dim_product,standard_cost,"Decimal(18, 4)",8,,,0,0,0,0,,,18.0,4.0,,Standard cost per base unit
+manufacturing_dw,dim_product,standard_price,"Decimal(18, 4)",9,,,0,0,0,0,,,18.0,4.0,,Standard selling price per base unit where applicable
+manufacturing_dw,dim_product,weight_kg,"Decimal(18, 4)",10,,,0,0,0,0,,,18.0,4.0,,Weight of one base unit in kilograms
+manufacturing_dw,dim_product,shelf_life_days,UInt32,11,,,0,0,0,0,,,32.0,0.0,,Expected shelf life in days; 0 when shelf life is not applicable
+manufacturing_dw,dim_product,is_batch_tracked,UInt8,12,,,0,0,0,0,,,8.0,0.0,,Flag indicating whether the product is tracked by batch or lot
+manufacturing_dw,dim_product,is_serial_tracked,UInt8,13,,,0,0,0,0,,,8.0,0.0,,Flag indicating whether the product is tracked by serial number
+manufacturing_dw,dim_product,is_active,UInt8,14,,,0,0,0,0,,,8.0,0.0,,Flag indicating whether the product is active
+manufacturing_dw,dim_product,valid_from,Date,15,,,0,0,0,0,,,,,0.0,Start date when this dimension row became valid
+manufacturing_dw,dim_product,valid_to,Date,16,,,0,0,0,0,,,,,0.0,End date when this dimension row stopped being valid
+manufacturing_dw,dim_product,is_current,UInt8,17,,,0,0,0,0,,,8.0,0.0,,Flag indicating whether this is the current active version of the dimension row
+manufacturing_dw,dim_supplier,supplier_key,UInt32,1,,,0,1,1,0,,,32.0,0.0,,Surrogate key for the supplier dimension
+manufacturing_dw,dim_supplier,supplier_id,String,2,,,0,0,0,0,,,,,,Business identifier of the supplier from the procurement or ERP system
+manufacturing_dw,dim_supplier,supplier_name,String,3,,,0,0,0,0,,,,,,Supplier legal or trading name
+manufacturing_dw,dim_supplier,supplier_category,String,4,,,0,0,0,0,,,,,,"Supplier category such as raw_material, packaging, tooling, or logistics"
+manufacturing_dw,dim_supplier,country,String,5,,,0,0,0,0,,,,,,Country where the supplier is based
+manufacturing_dw,dim_supplier,lead_time_days,UInt16,6,,,0,0,0,0,,,16.0,0.0,,Standard supplier lead time in days for delivered materials
+manufacturing_dw,dim_supplier,payment_terms,String,7,,,0,0,0,0,,,,,,Commercial payment terms agreed with the supplier
+manufacturing_dw,dim_supplier,quality_rating,"Decimal(5, 2)",8,,,0,0,0,0,,,5.0,2.0,,Internal quality score assigned to the supplier
+manufacturing_dw,dim_supplier,is_preferred,UInt8,9,,,0,0,0,0,,,8.0,0.0,,Flag indicating whether the supplier is preferred; 1 means preferred
+manufacturing_dw,dim_supplier,is_active,UInt8,10,,,0,0,0,0,,,8.0,0.0,,"Flag indicating whether the supplier is active; 1 means active, 0 means inactive"
+manufacturing_dw,dim_supplier,valid_from,Date,11,,,0,0,0,0,,,,,0.0,Start date when this dimension row became valid
+manufacturing_dw,dim_supplier,valid_to,Date,12,,,0,0,0,0,,,,,0.0,End date when this dimension row stopped being valid
+manufacturing_dw,dim_supplier,is_current,UInt8,13,,,0,0,0,0,,,8.0,0.0,,Flag indicating whether this is the current active version of the dimension row
+manufacturing_dw,dim_warehouse,warehouse_key,UInt32,1,,,0,1,1,0,,,32.0,0.0,,Surrogate key for the warehouse dimension
+manufacturing_dw,dim_warehouse,warehouse_id,String,2,,,0,0,0,0,,,,,,Business identifier of the warehouse or storage location
+manufacturing_dw,dim_warehouse,warehouse_name,String,3,,,0,0,0,0,,,,,,Human-readable warehouse name
+manufacturing_dw,dim_warehouse,plant_key,UInt32,4,,,0,0,0,0,,,32.0,0.0,,Foreign key to dim_plant indicating which plant owns or uses the warehouse
+manufacturing_dw,dim_warehouse,warehouse_type,String,5,,,0,0,0,0,,,,,,"Warehouse type such as raw_material, wip, finished_goods, spare_parts, or quarantine"
+manufacturing_dw,dim_warehouse,temperature_zone,String,6,,,0,0,0,0,,,,,,"Storage temperature category such as ambient, chilled, or frozen"
+manufacturing_dw,dim_warehouse,capacity_units,"Decimal(18, 2)",7,,,0,0,0,0,,,18.0,2.0,,Declared storage capacity in warehouse-defined units
+manufacturing_dw,dim_warehouse,capacity_uom,String,8,,,0,0,0,0,,,,,,"Unit of measure for capacity such as pallets, bins, or cubic_meters"
+manufacturing_dw,dim_warehouse,is_active,UInt8,9,,,0,0,0,0,,,8.0,0.0,,"Flag indicating whether the warehouse is active; 1 means active, 0 means inactive"
+manufacturing_dw,dim_warehouse,valid_from,Date,10,,,0,0,0,0,,,,,0.0,Start date when this dimension row became valid
+manufacturing_dw,dim_warehouse,valid_to,Date,11,,,0,0,0,0,,,,,0.0,End date when this dimension row stopped being valid
+manufacturing_dw,dim_warehouse,is_current,UInt8,12,,,0,0,0,0,,,8.0,0.0,,Flag indicating whether this is the current active version of the dimension row
+manufacturing_dw,dim_work_center,work_center_key,UInt32,1,,,0,1,1,0,,,32.0,0.0,,Surrogate key for the work center dimension
+manufacturing_dw,dim_work_center,work_center_id,String,2,,,0,0,0,0,,,,,,Business identifier of the work center or machine group
+manufacturing_dw,dim_work_center,plant_key,UInt32,3,,,0,0,0,0,,,32.0,0.0,,Foreign key to dim_plant indicating where the work center operates
+manufacturing_dw,dim_work_center,work_center_name,String,4,,,0,0,0,0,,,,,,Human-readable name of the work center
+manufacturing_dw,dim_work_center,department_name,String,5,,,0,0,0,0,,,,,,Department or production area responsible for the work center
+manufacturing_dw,dim_work_center,work_center_type,String,6,,,0,0,0,0,,,,,,"Type of work center such as machining, welding, assembly, paint, or packaging"
+manufacturing_dw,dim_work_center,capacity_hours_per_day,"Decimal(10, 2)",7,,,0,0,0,0,,,10.0,2.0,,Nominal available production hours per day
+manufacturing_dw,dim_work_center,is_bottleneck,UInt8,8,,,0,0,0,0,,,8.0,0.0,,Flag indicating whether the work center is considered a production bottleneck
+manufacturing_dw,dim_work_center,is_active,UInt8,9,,,0,0,0,0,,,8.0,0.0,,Flag indicating whether the work center is active
+manufacturing_dw,dim_work_center,valid_from,Date,10,,,0,0,0,0,,,,,0.0,Start date when this dimension row became valid
+manufacturing_dw,dim_work_center,valid_to,Date,11,,,0,0,0,0,,,,,0.0,End date when this dimension row stopped being valid
+manufacturing_dw,dim_work_center,is_current,UInt8,12,,,0,0,0,0,,,8.0,0.0,,Flag indicating whether this is the current active version of the dimension row
+manufacturing_dw,fact_inventory_snapshot,snapshot_ts,DateTime,1,,,1,1,1,0,,,,,0.0,Timestamp when the inventory snapshot was taken
+manufacturing_dw,fact_inventory_snapshot,date_key,UInt32,2,,,0,0,0,0,,,32.0,0.0,,Foreign key to dim_date for the snapshot date
+manufacturing_dw,fact_inventory_snapshot,plant_key,UInt32,3,,,0,1,1,0,,,32.0,0.0,,Foreign key to dim_plant for the plant holding the stock
+manufacturing_dw,fact_inventory_snapshot,warehouse_key,UInt32,4,,,0,1,1,0,,,32.0,0.0,,Foreign key to dim_warehouse for the storage location
+manufacturing_dw,fact_inventory_snapshot,product_key,UInt32,5,,,0,1,1,0,,,32.0,0.0,,Foreign key to dim_product for the stocked item
+manufacturing_dw,fact_inventory_snapshot,batch_number,String,6,,,0,1,1,0,,,,,,Batch or lot identifier when batch tracking is enabled
+manufacturing_dw,fact_inventory_snapshot,quantity_on_hand,"Decimal(18, 4)",7,,,0,0,0,0,,,18.0,4.0,,Physical quantity currently on hand
+manufacturing_dw,fact_inventory_snapshot,quantity_reserved,"Decimal(18, 4)",8,,,0,0,0,0,,,18.0,4.0,,Quantity reserved for production or customer demand
+manufacturing_dw,fact_inventory_snapshot,quantity_available,"Decimal(18, 4)",9,,,0,0,0,0,,,18.0,4.0,,Quantity available for use after reservations
+manufacturing_dw,fact_inventory_snapshot,inventory_uom,String,10,,,0,0,0,0,,,,,,Unit of measure of the inventory quantities
+manufacturing_dw,fact_inventory_snapshot,inventory_value,"Decimal(18, 4)",11,,,0,0,0,0,,,18.0,4.0,,Extended inventory value for the available stock according to costing rules
+manufacturing_dw,fact_material_receipt,receipt_id,String,1,,,0,1,1,0,,,,,,Unique identifier for the material receipt transaction
+manufacturing_dw,fact_material_receipt,receipt_ts,DateTime,2,,,1,1,1,0,,,,,0.0,Timestamp when the receipt was posted
+manufacturing_dw,fact_material_receipt,date_key,UInt32,3,,,0,0,0,0,,,32.0,0.0,,Foreign key to dim_date for the receipt date
+manufacturing_dw,fact_material_receipt,supplier_key,UInt32,4,,,0,1,1,0,,,32.0,0.0,,Foreign key to dim_supplier for the supplier that delivered the material
+manufacturing_dw,fact_material_receipt,plant_key,UInt32,5,,,0,1,1,0,,,32.0,0.0,,Foreign key to dim_plant for the receiving plant
+manufacturing_dw,fact_material_receipt,warehouse_key,UInt32,6,,,0,1,1,0,,,32.0,0.0,,Foreign key to dim_warehouse for the receiving storage location
+manufacturing_dw,fact_material_receipt,product_key,UInt32,7,,,0,1,1,0,,,32.0,0.0,,Foreign key to dim_product for the received item
+manufacturing_dw,fact_material_receipt,purchase_order_number,String,8,,,0,0,0,0,,,,,,Purchase order number associated with the receipt
+manufacturing_dw,fact_material_receipt,purchase_order_line,UInt32,9,,,0,0,0,0,,,32.0,0.0,,Purchase order line number associated with the receipt
+manufacturing_dw,fact_material_receipt,batch_number,String,10,,,0,0,0,0,,,,,,Supplier or internal batch number assigned to the received lot
+manufacturing_dw,fact_material_receipt,quantity_received,"Decimal(18, 4)",11,,,0,0,0,0,,,18.0,4.0,,Quantity physically received
+manufacturing_dw,fact_material_receipt,quantity_accepted,"Decimal(18, 4)",12,,,0,0,0,0,,,18.0,4.0,,Quantity accepted after inspection
+manufacturing_dw,fact_material_receipt,quantity_rejected,"Decimal(18, 4)",13,,,0,0,0,0,,,18.0,4.0,,Quantity rejected during receipt or inspection
+manufacturing_dw,fact_material_receipt,receipt_uom,String,14,,,0,0,0,0,,,,,,Unit of measure of the receipt quantities
+manufacturing_dw,fact_material_receipt,unit_cost,"Decimal(18, 4)",15,,,0,0,0,0,,,18.0,4.0,,Unit cost recorded at receipt
+manufacturing_dw,fact_material_receipt,total_cost,"Decimal(18, 4)",16,,,0,0,0,0,,,18.0,4.0,,Extended total receipt cost
+manufacturing_dw,fact_production_operation,production_order_id,String,1,,,0,1,1,0,,,,,,Identifier of the production order this operation belongs to
+manufacturing_dw,fact_production_operation,operation_sequence,UInt16,2,,,0,1,1,0,,,16.0,0.0,,Sequence number of the operation within the routing
+manufacturing_dw,fact_production_operation,work_center_key,UInt32,3,,,0,0,0,0,,,32.0,0.0,,Foreign key to dim_work_center where the operation was executed
+manufacturing_dw,fact_production_operation,plant_key,UInt32,4,,,0,0,0,0,,,32.0,0.0,,Foreign key to dim_plant where the operation was executed
+manufacturing_dw,fact_production_operation,product_key,UInt32,5,,,0,0,0,0,,,32.0,0.0,,Foreign key to dim_product being produced during the operation
+manufacturing_dw,fact_production_operation,operation_name,String,6,,,0,0,0,0,,,,,,"Human-readable operation name such as cutting, welding, or assembly"
+manufacturing_dw,fact_production_operation,operation_status,String,7,,,0,0,0,0,,,,,,"Current status of the operation such as queued, running, completed, or failed"
+manufacturing_dw,fact_production_operation,setup_time_minutes,"Decimal(12, 2)",8,,,0,0,0,0,,,12.0,2.0,,Actual setup time consumed by the operation in minutes
+manufacturing_dw,fact_production_operation,run_time_minutes,"Decimal(12, 2)",9,,,0,0,0,0,,,12.0,2.0,,Actual run time consumed by the operation in minutes
+manufacturing_dw,fact_production_operation,downtime_minutes,"Decimal(12, 2)",10,,,0,0,0,0,,,12.0,2.0,,Downtime experienced during the operation in minutes
+manufacturing_dw,fact_production_operation,labor_hours,"Decimal(12, 2)",11,,,0,0,0,0,,,12.0,2.0,,Direct labor hours charged to the operation
+manufacturing_dw,fact_production_operation,machine_hours,"Decimal(12, 2)",12,,,0,0,0,0,,,12.0,2.0,,Machine hours charged to the operation
+manufacturing_dw,fact_production_operation,good_quantity,"Decimal(18, 4)",13,,,0,0,0,0,,,18.0,4.0,,Quantity produced successfully by the operation
+manufacturing_dw,fact_production_operation,scrap_quantity,"Decimal(18, 4)",14,,,0,0,0,0,,,18.0,4.0,,Quantity scrapped during the operation
+manufacturing_dw,fact_production_operation,event_ts,DateTime,15,,,1,1,1,0,,,,,0.0,Timestamp representing the most important event time for this operation record
+manufacturing_dw,fact_production_order,production_order_id,String,1,,,0,1,1,0,,,,,,Unique identifier of the production order or work order
+manufacturing_dw,fact_production_order,order_status,String,2,,,0,0,0,0,,,,,,"Current status such as planned, released, in_progress, completed, or cancelled"
+manufacturing_dw,fact_production_order,plant_key,UInt32,3,,,0,1,1,0,,,32.0,0.0,,Foreign key to dim_plant where the order is produced
+manufacturing_dw,fact_production_order,product_key,UInt32,4,,,0,0,0,0,,,32.0,0.0,,Foreign key to dim_product for the finished good or assembly being produced
+manufacturing_dw,fact_production_order,planned_start_ts,DateTime,5,,,1,0,0,0,,,,,0.0,Planned start timestamp of the production order
+manufacturing_dw,fact_production_order,planned_end_ts,DateTime,6,,,0,0,0,0,,,,,0.0,Planned completion timestamp of the production order
+manufacturing_dw,fact_production_order,actual_start_ts,Nullable(DateTime),7,,,0,0,0,0,,,,,0.0,Actual start timestamp when execution began
+manufacturing_dw,fact_production_order,actual_end_ts,Nullable(DateTime),8,,,0,0,0,0,,,,,0.0,Actual completion timestamp when execution ended
+manufacturing_dw,fact_production_order,due_date_key,UInt32,9,,,0,0,0,0,,,32.0,0.0,,Foreign key to dim_date for the committed due date
+manufacturing_dw,fact_production_order,order_quantity,"Decimal(18, 4)",10,,,0,0,0,0,,,18.0,4.0,,Planned production quantity
+manufacturing_dw,fact_production_order,completed_quantity,"Decimal(18, 4)",11,,,0,0,0,0,,,18.0,4.0,,Quantity completed and reported as good output
+manufacturing_dw,fact_production_order,scrapped_quantity,"Decimal(18, 4)",12,,,0,0,0,0,,,18.0,4.0,,Quantity scrapped or lost during production
+manufacturing_dw,fact_production_order,order_uom,String,13,,,0,0,0,0,,,,,,Unit of measure of order quantities
+manufacturing_dw,fact_production_order,standard_cost_total,"Decimal(18, 4)",14,,,0,0,0,0,,,18.0,4.0,,Expected standard total cost of the production order
+manufacturing_dw,fact_production_order,actual_cost_total,"Decimal(18, 4)",15,,,0,0,0,0,,,18.0,4.0,,Actual accumulated total cost of the production order
+manufacturing_dw,fact_quality_inspection,inspection_id,String,1,,,0,1,1,0,,,,,,Unique identifier of the quality inspection event
+manufacturing_dw,fact_quality_inspection,inspection_ts,DateTime,2,,,1,1,1,0,,,,,0.0,Timestamp when the inspection occurred
+manufacturing_dw,fact_quality_inspection,date_key,UInt32,3,,,0,0,0,0,,,32.0,0.0,,Foreign key to dim_date for the inspection date
+manufacturing_dw,fact_quality_inspection,plant_key,UInt32,4,,,0,1,1,0,,,32.0,0.0,,Foreign key to dim_plant where the inspection occurred
+manufacturing_dw,fact_quality_inspection,product_key,UInt32,5,,,0,1,1,0,,,32.0,0.0,,Foreign key to dim_product being inspected
+manufacturing_dw,fact_quality_inspection,supplier_key,UInt32,6,,,0,0,0,0,,,32.0,0.0,,Foreign key to dim_supplier when the inspection is related to incoming material; use 0 or unknown when not applicable
+manufacturing_dw,fact_quality_inspection,production_order_id,String,7,,,0,0,0,0,,,,,,Production order associated with the inspection when applicable
+manufacturing_dw,fact_quality_inspection,batch_number,String,8,,,0,0,0,0,,,,,,Batch or lot number being inspected
+manufacturing_dw,fact_quality_inspection,inspection_type,String,9,,,0,0,0,0,,,,,,"Type of inspection such as incoming, in_process, final, or audit"
+manufacturing_dw,fact_quality_inspection,defect_code,String,10,,,0,0,0,0,,,,,,Defect code observed during inspection
+manufacturing_dw,fact_quality_inspection,defect_description,String,11,,,0,0,0,0,,,,,,Human-readable description of the observed defect
+manufacturing_dw,fact_quality_inspection,inspected_quantity,"Decimal(18, 4)",12,,,0,0,0,0,,,18.0,4.0,,Total quantity inspected
+manufacturing_dw,fact_quality_inspection,accepted_quantity,"Decimal(18, 4)",13,,,0,0,0,0,,,18.0,4.0,,Quantity accepted after inspection
+manufacturing_dw,fact_quality_inspection,rejected_quantity,"Decimal(18, 4)",14,,,0,0,0,0,,,18.0,4.0,,Quantity rejected after inspection
+manufacturing_dw,fact_quality_inspection,reworked_quantity,"Decimal(18, 4)",15,,,0,0,0,0,,,18.0,4.0,,Quantity sent to rework after inspection
+manufacturing_dw,fact_quality_inspection,inspection_result,String,16,,,0,0,0,0,,,,,,"Overall result such as pass, fail, conditional_pass, or rework"
+manufacturing_dw,fact_shipment,shipment_id,String,1,,,0,1,1,0,,,,,,Unique identifier of the outbound shipment
+manufacturing_dw,fact_shipment,shipment_ts,DateTime,2,,,1,1,1,0,,,,,0.0,Timestamp when the shipment was posted or dispatched
+manufacturing_dw,fact_shipment,date_key,UInt32,3,,,0,0,0,0,,,32.0,0.0,,Foreign key to dim_date for the shipment date
+manufacturing_dw,fact_shipment,customer_key,UInt32,4,,,0,1,1,0,,,32.0,0.0,,Foreign key to dim_customer receiving the goods
+manufacturing_dw,fact_shipment,plant_key,UInt32,5,,,0,0,0,0,,,32.0,0.0,,Foreign key to dim_plant shipping the goods
+manufacturing_dw,fact_shipment,warehouse_key,UInt32,6,,,0,0,0,0,,,32.0,0.0,,Foreign key to dim_warehouse from which the goods were shipped
+manufacturing_dw,fact_shipment,product_key,UInt32,7,,,0,1,1,0,,,32.0,0.0,,Foreign key to dim_product being shipped
+manufacturing_dw,fact_shipment,sales_order_number,String,8,,,0,0,0,0,,,,,,Sales order number associated with the shipment
+manufacturing_dw,fact_shipment,sales_order_line,UInt32,9,,,0,0,0,0,,,32.0,0.0,,Sales order line number associated with the shipment
+manufacturing_dw,fact_shipment,batch_number,String,10,,,0,0,0,0,,,,,,Batch or lot number shipped when applicable
+manufacturing_dw,fact_shipment,shipped_quantity,"Decimal(18, 4)",11,,,0,0,0,0,,,18.0,4.0,,Quantity shipped to the customer
+manufacturing_dw,fact_shipment,shipment_uom,String,12,,,0,0,0,0,,,,,,Unit of measure of the shipped quantity
+manufacturing_dw,fact_shipment,net_sales_amount,"Decimal(18, 4)",13,,,0,0,0,0,,,18.0,4.0,,Net sales amount recognized for the shipment excluding tax
+manufacturing_dw,fact_shipment,freight_amount,"Decimal(18, 4)",14,,,0,0,0,0,,,18.0,4.0,,Freight amount charged or allocated to the shipment
+manufacturing_dw,kpi_definitions,kpi_name,String,1,,,0,1,1,0,,,,,,Business-friendly KPI name
+manufacturing_dw,kpi_definitions,kpi_category,String,2,,,0,1,1,0,,,,,,"Category such as inventory, production, quality, procurement, or shipment"
+manufacturing_dw,kpi_definitions,source_table,String,3,,,0,0,0,0,,,,,,Primary table used to calculate the KPI
+manufacturing_dw,kpi_definitions,grain_note,String,4,,,0,0,0,0,,,,,,Required grain or aggregation guidance before computing the KPI
+manufacturing_dw,kpi_definitions,formula_sql,String,5,,,0,0,0,0,,,,,,SQL expression or pseudo-SQL used to calculate the KPI
+manufacturing_dw,kpi_definitions,numerator_definition,String,6,,,0,0,0,0,,,,,,Business meaning of the numerator if applicable
+manufacturing_dw,kpi_definitions,denominator_definition,String,7,,,0,0,0,0,,,,,,Business meaning of the denominator if applicable
+manufacturing_dw,kpi_definitions,unit_of_measure,String,8,,,0,0,0,0,,,,,,"Output unit such as percent, quantity, currency, hours, or ratio"
+manufacturing_dw,kpi_definitions,preferred_time_column,String,9,,,0,0,0,0,,,,,,Recommended time column for trend analysis
+manufacturing_dw,kpi_definitions,dimensions_supported,String,10,,,0,0,0,0,,,,,,Comma-separated list of dimensions commonly used with this KPI
+manufacturing_dw,kpi_definitions,filters_supported,String,11,,,0,0,0,0,,,,,,Comma-separated list of recommended filters for this KPI
+manufacturing_dw,kpi_definitions,interpretation,String,12,,,0,0,0,0,,,,,,Human-readable explanation of what high or low values mean
+manufacturing_dw,kpi_definitions,caveats,String,13,,,0,0,0,0,,,,,,"Warnings about data quality, grain mismatch, or interpretation limits"
+manufacturing_dw,table_ai_context,database_name,String,1,,,0,1,1,0,,,,,,Database that owns the table
+manufacturing_dw,table_ai_context,table_name,String,2,,,0,1,1,0,,,,,,Physical table name
+manufacturing_dw,table_ai_context,table_role,String,3,,,0,0,0,0,,,,,,"High-level role of the table such as dimension, fact, bridge, metadata, or view"
+manufacturing_dw,table_ai_context,business_grain,String,4,,,0,0,0,0,,,,,,Lowest level of detail represented by one row in the table
+manufacturing_dw,table_ai_context,business_purpose,String,5,,,0,0,0,0,,,,,,Business reason the table exists and how it should be used
+manufacturing_dw,table_ai_context,primary_time_column,String,6,,,0,0,0,0,,,,,,Main timestamp or date column to use for time filtering; blank if not applicable
+manufacturing_dw,table_ai_context,default_dimensions,String,7,,,0,0,0,0,,,,,,Comma-separated list of common dimension columns used for grouping and filtering
+manufacturing_dw,table_ai_context,default_measures,String,8,,,0,0,0,0,,,,,,Comma-separated list of common numeric measures used for aggregations
+manufacturing_dw,table_ai_context,common_filters,String,9,,,0,0,0,0,,,,,,Comma-separated list of recommended business filters for this table
+manufacturing_dw,table_ai_context,join_instructions,String,10,,,0,0,0,0,,,,,,Human-readable guidance on how this table should be joined to related tables
+manufacturing_dw,table_ai_context,data_freshness_expectation,String,11,,,0,0,0,0,,,,,,"Expected refresh cadence such as realtime, hourly, daily, or snapshot"
+manufacturing_dw,table_ai_context,ai_usage_notes,String,12,,,0,0,0,0,,,,,,Extra instructions for AI tools on how to interpret or prioritize the table
+manufacturing_dw,table_descriptions,database_name,String,1,,,0,1,1,0,,,,,,Database name that owns the table
+manufacturing_dw,table_descriptions,table_name,String,2,,,0,1,1,0,,,,,,Physical table name
+manufacturing_dw,table_descriptions,table_description,String,3,,,0,0,0,0,,,,,,Business description of the table and how it should be used by analytics or AI
+manufacturing_dw,v_ai_business_synonyms,synonym,String,1,,,0,0,0,0,,,,,,
+manufacturing_dw,v_ai_business_synonyms,canonical_term,String,2,,,0,0,0,0,,,,,,
+manufacturing_dw,v_ai_business_synonyms,term_type,String,3,,,0,0,0,0,,,,,,
+manufacturing_dw,v_ai_business_synonyms,target_table,String,4,,,0,0,0,0,,,,,,
+manufacturing_dw,v_ai_business_synonyms,target_column,String,5,,,0,0,0,0,,,,,,
+manufacturing_dw,v_ai_business_synonyms,target_value,String,6,,,0,0,0,0,,,,,,
+manufacturing_dw,v_ai_business_synonyms,domain,String,7,,,0,0,0,0,,,,,,
+manufacturing_dw,v_ai_business_synonyms,confidence_score,"Decimal(5, 2)",8,,,0,0,0,0,,,5.0,2.0,,
+manufacturing_dw,v_ai_business_synonyms,usage_note,String,9,,,0,0,0,0,,,,,,
+manufacturing_dw,v_ai_business_synonyms,is_active,UInt8,10,,,0,0,0,0,,,8.0,0.0,,
+manufacturing_dw,v_ai_questions,domain,String,1,,,0,0,0,0,,,,,,
+manufacturing_dw,v_ai_questions,question_text,String,2,,,0,0,0,0,,,,,,
+manufacturing_dw,v_ai_questions,primary_table,String,3,,,0,0,0,0,,,,,,
+manufacturing_dw,v_ai_questions,related_tables,String,4,,,0,0,0,0,,,,,,
+manufacturing_dw,v_ai_questions,expected_grouping,String,5,,,0,0,0,0,,,,,,
+manufacturing_dw,v_ai_questions,expected_filters,String,6,,,0,0,0,0,,,,,,
+manufacturing_dw,v_ai_questions,notes,String,7,,,0,0,0,0,,,,,,
+manufacturing_dw,v_ai_semantic_catalog,database_name,String,1,,,0,0,0,0,,,,,,
+manufacturing_dw,v_ai_semantic_catalog,table_name,String,2,,,0,0,0,0,,,,,,
+manufacturing_dw,v_ai_semantic_catalog,native_table_comment,String,3,,,0,0,0,0,,,,,,
+manufacturing_dw,v_ai_semantic_catalog,table_description,String,4,,,0,0,0,0,,,,,,
+manufacturing_dw,v_ai_semantic_catalog,table_role,String,5,,,0,0,0,0,,,,,,
+manufacturing_dw,v_ai_semantic_catalog,business_grain,String,6,,,0,0,0,0,,,,,,
+manufacturing_dw,v_ai_semantic_catalog,business_purpose,String,7,,,0,0,0,0,,,,,,
+manufacturing_dw,v_ai_semantic_catalog,primary_time_column,String,8,,,0,0,0,0,,,,,,
+manufacturing_dw,v_ai_semantic_catalog,default_dimensions,String,9,,,0,0,0,0,,,,,,
+manufacturing_dw,v_ai_semantic_catalog,default_measures,String,10,,,0,0,0,0,,,,,,
+manufacturing_dw,v_ai_semantic_catalog,common_filters,String,11,,,0,0,0,0,,,,,,
+manufacturing_dw,v_ai_semantic_catalog,join_instructions,String,12,,,0,0,0,0,,,,,,
+manufacturing_dw,v_ai_semantic_catalog,data_freshness_expectation,String,13,,,0,0,0,0,,,,,,
+manufacturing_dw,v_ai_semantic_catalog,ai_usage_notes,String,14,,,0,0,0,0,,,,,,
+manufacturing_dw,v_ai_semantic_catalog,column_position,UInt64,15,,,0,0,0,0,,,64.0,0.0,,
+manufacturing_dw,v_ai_semantic_catalog,column_name,String,16,,,0,0,0,0,,,,,,
+manufacturing_dw,v_ai_semantic_catalog,column_type,String,17,,,0,0,0,0,,,,,,
+manufacturing_dw,v_ai_semantic_catalog,column_description,String,18,,,0,0,0,0,,,,,,
+manufacturing_dw,v_ai_sql_templates,template_name,String,1,,,0,0,0,0,,,,,,
+manufacturing_dw,v_ai_sql_templates,template_category,String,2,,,0,0,0,0,,,,,,
+manufacturing_dw,v_ai_sql_templates,business_question,String,3,,,0,0,0,0,,,,,,
+manufacturing_dw,v_ai_sql_templates,intent_type,String,4,,,0,0,0,0,,,,,,
+manufacturing_dw,v_ai_sql_templates,primary_table,String,5,,,0,0,0,0,,,,,,
+manufacturing_dw,v_ai_sql_templates,related_tables,String,6,,,0,0,0,0,,,,,,
+manufacturing_dw,v_ai_sql_templates,primary_time_column,String,7,,,0,0,0,0,,,,,,
+manufacturing_dw,v_ai_sql_templates,grain_description,String,8,,,0,0,0,0,,,,,,
+manufacturing_dw,v_ai_sql_templates,required_filters,String,9,,,0,0,0,0,,,,,,
+manufacturing_dw,v_ai_sql_templates,optional_filters,String,10,,,0,0,0,0,,,,,,
+manufacturing_dw,v_ai_sql_templates,grouping_columns,String,11,,,0,0,0,0,,,,,,
+manufacturing_dw,v_ai_sql_templates,measure_logic,String,12,,,0,0,0,0,,,,,,
+manufacturing_dw,v_ai_sql_templates,sql_template,String,13,,,0,0,0,0,,,,,,
+manufacturing_dw,v_ai_sql_templates,result_notes,String,14,,,0,0,0,0,,,,,,
+manufacturing_dw,v_ai_sql_templates,caveats,String,15,,,0,0,0,0,,,,,,
+manufacturing_dw,v_ai_sql_templates,is_active,UInt8,16,,,0,0,0,0,,,8.0,0.0,,
+manufacturing_dw,v_ai_sql_templates_summary,template_category,String,1,,,0,0,0,0,,,,,,
+manufacturing_dw,v_ai_sql_templates_summary,template_name,String,2,,,0,0,0,0,,,,,,
+manufacturing_dw,v_ai_sql_templates_summary,business_question,String,3,,,0,0,0,0,,,,,,
+manufacturing_dw,v_ai_sql_templates_summary,intent_type,String,4,,,0,0,0,0,,,,,,
+manufacturing_dw,v_ai_sql_templates_summary,primary_table,String,5,,,0,0,0,0,,,,,,
+manufacturing_dw,v_ai_sql_templates_summary,primary_time_column,String,6,,,0,0,0,0,,,,,,
+manufacturing_dw,v_ai_sql_templates_summary,grouping_columns,String,7,,,0,0,0,0,,,,,,
+manufacturing_dw,v_ai_sql_templates_summary,measure_logic,String,8,,,0,0,0,0,,,,,,
+manufacturing_dw,v_ai_synonyms_by_column,target_table,String,1,,,0,0,0,0,,,,,,
+manufacturing_dw,v_ai_synonyms_by_column,target_column,String,2,,,0,0,0,0,,,,,,
+manufacturing_dw,v_ai_synonyms_by_column,synonyms,Array(String),3,,,0,0,0,0,,,,,,
+manufacturing_dw,v_ai_synonyms_by_column,canonical_terms,Array(String),4,,,0,0,0,0,,,,,,
+manufacturing_dw,v_ai_synonyms_by_table,target_table,String,1,,,0,0,0,0,,,,,,
+manufacturing_dw,v_ai_synonyms_by_table,synonyms,Array(String),2,,,0,0,0,0,,,,,,
+manufacturing_dw,v_ai_synonyms_by_table,canonical_terms,Array(String),3,,,0,0,0,0,,,,,,
+manufacturing_dw,v_ai_vocabulary_catalog,synonym,String,1,,,0,0,0,0,,,,,,
+manufacturing_dw,v_ai_vocabulary_catalog,canonical_term,String,2,,,0,0,0,0,,,,,,
+manufacturing_dw,v_ai_vocabulary_catalog,term_type,String,3,,,0,0,0,0,,,,,,
+manufacturing_dw,v_ai_vocabulary_catalog,domain,String,4,,,0,0,0,0,,,,,,
+manufacturing_dw,v_ai_vocabulary_catalog,target_table,String,5,,,0,0,0,0,,,,,,
+manufacturing_dw,v_ai_vocabulary_catalog,target_column,String,6,,,0,0,0,0,,,,,,
+manufacturing_dw,v_ai_vocabulary_catalog,target_value,String,7,,,0,0,0,0,,,,,,
+manufacturing_dw,v_ai_vocabulary_catalog,confidence_score,"Decimal(5, 2)",8,,,0,0,0,0,,,5.0,2.0,,
+manufacturing_dw,v_ai_vocabulary_catalog,usage_note,String,9,,,0,0,0,0,,,,,,
+manufacturing_dw,v_ai_vocabulary_catalog,table_role,String,10,,,0,0,0,0,,,,,,
+manufacturing_dw,v_ai_vocabulary_catalog,business_grain,String,11,,,0,0,0,0,,,,,,
+manufacturing_dw,v_ai_vocabulary_catalog,business_purpose,String,12,,,0,0,0,0,,,,,,
+manufacturing_dw,v_ai_vocabulary_catalog,primary_time_column,String,13,,,0,0,0,0,,,,,,
+manufacturing_dw,v_data_dictionary,database_name,String,1,,,0,0,0,0,,,,,,
+manufacturing_dw,v_data_dictionary,table_name,String,2,,,0,0,0,0,,,,,,
+manufacturing_dw,v_data_dictionary,table_description,String,3,,,0,0,0,0,,,,,,
+manufacturing_dw,v_data_dictionary,column_position,UInt64,4,,,0,0,0,0,,,64.0,0.0,,
+manufacturing_dw,v_data_dictionary,column_name,String,5,,,0,0,0,0,,,,,,
+manufacturing_dw,v_data_dictionary,column_type,String,6,,,0,0,0,0,,,,,,
+manufacturing_dw,v_data_dictionary,column_description,String,7,,,0,0,0,0,,,,,,
+manufacturing_dw,v_kpi_catalog,kpi_name,String,1,,,0,0,0,0,,,,,,
+manufacturing_dw,v_kpi_catalog,kpi_category,String,2,,,0,0,0,0,,,,,,
+manufacturing_dw,v_kpi_catalog,source_table,String,3,,,0,0,0,0,,,,,,
+manufacturing_dw,v_kpi_catalog,grain_note,String,4,,,0,0,0,0,,,,,,
+manufacturing_dw,v_kpi_catalog,formula_sql,String,5,,,0,0,0,0,,,,,,
+manufacturing_dw,v_kpi_catalog,numerator_definition,String,6,,,0,0,0,0,,,,,,
+manufacturing_dw,v_kpi_catalog,denominator_definition,String,7,,,0,0,0,0,,,,,,
+manufacturing_dw,v_kpi_catalog,unit_of_measure,String,8,,,0,0,0,0,,,,,,
+manufacturing_dw,v_kpi_catalog,preferred_time_column,String,9,,,0,0,0,0,,,,,,
+manufacturing_dw,v_kpi_catalog,dimensions_supported,String,10,,,0,0,0,0,,,,,,
+manufacturing_dw,v_kpi_catalog,filters_supported,String,11,,,0,0,0,0,,,,,,
+manufacturing_dw,v_kpi_catalog,interpretation,String,12,,,0,0,0,0,,,,,,
+manufacturing_dw,v_kpi_catalog,caveats,String,13,,,0,0,0,0,,,,,,
+manufacturing_dw,v_table_catalog,database_name,String,1,,,0,0,0,0,,,,,,
+manufacturing_dw,v_table_catalog,table_name,String,2,,,0,0,0,0,,,,,,
+manufacturing_dw,v_table_catalog,engine,String,3,,,0,0,0,0,,,,,,
+manufacturing_dw,v_table_catalog,native_table_comment,String,4,,,0,0,0,0,,,,,,
+manufacturing_dw,v_table_catalog,table_description,String,5,,,0,0,0,0,,,,,,
+manufacturing_dw,v_table_catalog,table_role,String,6,,,0,0,0,0,,,,,,
+manufacturing_dw,v_table_catalog,business_grain,String,7,,,0,0,0,0,,,,,,
+manufacturing_dw,v_table_catalog,business_purpose,String,8,,,0,0,0,0,,,,,,
+manufacturing_dw,v_table_catalog,primary_time_column,String,9,,,0,0,0,0,,,,,,
+manufacturing_dw,v_table_catalog,default_dimensions,String,10,,,0,0,0,0,,,,,,
+manufacturing_dw,v_table_catalog,default_measures,String,11,,,0,0,0,0,,,,,,
+manufacturing_dw,v_table_catalog,common_filters,String,12,,,0,0,0,0,,,,,,
+manufacturing_dw,v_table_catalog,join_instructions,String,13,,,0,0,0,0,,,,,,
+manufacturing_dw,v_table_catalog,data_freshness_expectation,String,14,,,0,0,0,0,,,,,,
+manufacturing_dw,v_table_catalog,ai_usage_notes,String,15,,,0,0,0,0,,,,,,

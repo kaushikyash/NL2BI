@@ -1,0 +1,7 @@
+database,table,rows,bytes_on_disk,data_compressed_bytes,data_uncompressed_bytes,part_count
+manufacturing_dw,ai_sql_templates,36,14254,11289,38378,2
+manufacturing_dw,ai_business_synonyms,107,8997,7974,19232,1
+manufacturing_dw,table_ai_context,15,7118,5902,9686,1
+manufacturing_dw,kpi_definitions,15,5494,4221,8174,1
+manufacturing_dw,ai_example_questions,8,2463,1703,2209,1
+manufacturing_dw,table_descriptions,15,1623,1161,1974,1

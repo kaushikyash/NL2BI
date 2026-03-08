@@ -1,0 +1,128 @@
+import clickhouse_connect
+import pandas as pd
+from pathlib import Path
+
+
+HOST = "localhost"
+PORT = 8123
+USERNAME = "default"
+PASSWORD = ""
+DATABASE = "manufacturing_dw"
+OUTPUT_DIR = Path("clickhouse_metadata")
+
+
+def get_client():
+    return clickhouse_connect.get_client(
+        host=HOST,
+        port=PORT,
+        username=USERNAME,
+        password=PASSWORD,
+        database=DATABASE,
+    )
+
+
+def run_query_to_df(client, query: str) -> pd.DataFrame:
+    result = client.query(query)
+    return pd.DataFrame(result.result_rows, columns=result.column_names)
+
+
+def main():
+    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    client = get_client()
+
+    tables_query = """
+    SELECT
+        database,
+        name AS table_name,
+        engine,
+        total_rows,
+        total_bytes,
+        partition_key,
+        sorting_key,
+        primary_key,
+        sampling_key,
+        metadata_modification_time,
+        create_table_query
+    FROM system.tables
+    WHERE database NOT IN ('system', 'information_schema', 'INFORMATION_SCHEMA')
+    ORDER BY database, table_name
+    """
+
+    columns_query = """
+    SELECT
+        database,
+        table,
+        name AS column_name,
+        type AS data_type,
+        position,
+        default_kind,
+        default_expression,
+        is_in_partition_key,
+        is_in_sorting_key,
+        is_in_primary_key,
+        is_in_sampling_key,
+        compression_codec,
+        character_octet_length,
+        numeric_precision,
+        numeric_scale,
+        datetime_precision,
+        comment
+    FROM system.columns
+    WHERE database NOT IN ('system', 'information_schema', 'INFORMATION_SCHEMA')
+    ORDER BY database, table, position
+    """
+
+    parts_query = """
+    SELECT
+        database,
+        table,
+        partition,
+        name AS part_name,
+        active,
+        rows,
+        bytes_on_disk,
+        data_compressed_bytes,
+        data_uncompressed_bytes,
+        marks,
+        modification_time,
+        remove_time
+    FROM system.parts
+    WHERE database NOT IN ('system', 'information_schema', 'INFORMATION_SCHEMA')
+    ORDER BY database, table, partition, part_name
+    """
+
+    table_storage_query = """
+    SELECT
+        database,
+        table,
+        sum(rows) AS rows,
+        sum(bytes_on_disk) AS bytes_on_disk,
+        sum(data_compressed_bytes) AS data_compressed_bytes,
+        sum(data_uncompressed_bytes) AS data_uncompressed_bytes,
+        count() AS part_count
+    FROM system.parts
+    WHERE active = 1
+      AND database NOT IN ('system', 'information_schema', 'INFORMATION_SCHEMA')
+    GROUP BY database, table
+    ORDER BY bytes_on_disk DESC
+    """
+
+    tables_df = run_query_to_df(client, tables_query)
+    columns_df = run_query_to_df(client, columns_query)
+    parts_df = run_query_to_df(client, parts_query)
+    storage_df = run_query_to_df(client, table_storage_query)
+
+    tables_df.to_csv(OUTPUT_DIR / "tables.csv", index=False)
+    columns_df.to_csv(OUTPUT_DIR / "columns.csv", index=False)
+    parts_df.to_csv(OUTPUT_DIR / "parts.csv", index=False)
+    storage_df.to_csv(OUTPUT_DIR / "table_storage.csv", index=False)
+
+    print(f"Saved metadata files to: {OUTPUT_DIR.resolve()}")
+    print(f"Tables:   {len(tables_df)} rows")
+    print(f"Columns:  {len(columns_df)} rows")
+    print(f"Parts:    {len(parts_df)} rows")
+    print(f"Storage:  {len(storage_df)} rows")
+
+
+if __name__ == "__main__":
+    main()
