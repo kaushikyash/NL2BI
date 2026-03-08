@@ -1,0 +1,45 @@
+<mat-card class="chat-card">
+  <mat-card-header>
+    <mat-card-title>Chat & Query</mat-card-title>
+    <div class="header-actions">
+      <mat-form-field appearance="outline" class="db-select">
+        <mat-label>DB Type</mat-label>
+        <mat-select [(ngModel)]="selectedDbType" (selectionChange)="onDbTypeChange()">
+          <mat-option value="SQL">SQL</mat-option>
+          <mat-option value="Oracle">Oracle</mat-option>
+          <mat-option value="Postgres">Postgres</mat-option>
+        </mat-select>
+      </mat-form-field>
+      <button mat-button (click)="logout()">Logout</button>
+    </div>
+  </mat-card-header>
+  <mat-card-content #chatContent class="chat-content">
+    <ng-container *ngIf="messages().length === 0">
+      <p class="message-list">Welcome to the Chat & Query interface! Start by typing your query below.</p>
+    </ng-container>
+    <ng-container *ngIf="messages().length > 0">
+      <mat-list class="message-list">
+        <div #messageContainer class="message-container">
+      @for (msg of messages(); track $index) {
+        <mat-list-item class="message-item">
+          @if (msg.startsWith('Bot:')) {
+            <img src="/assets/images/chatbot.jpg" alt="Bot Avatar" class="avatar">
+          } @else {
+            <img src="/assets/images/user.jpg" alt="User Avatar" class="avatar">
+          }
+          <span>{{ msg }}</span>
+        </mat-list-item>
+      }
+        </div>
+    </mat-list>
+    </ng-container>
+    
+  </mat-card-content>
+  <mat-card-actions>
+    <mat-form-field appearance="outline" class="message-input">
+      <mat-label>Type your query</mat-label>
+      <input matInput [(ngModel)]="newMessage" (keyup.enter)="addMessage()">
+    </mat-form-field>
+    <button mat-raised-button color="primary" (click)="addMessage()">Send</button>
+  </mat-card-actions>
+</mat-card>

@@ -1,0 +1,21 @@
+.dashboard-card {
+  max-width: 800px;
+  margin: 20px auto;
+}
+
+.header-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+}
+
+.dashboard-content {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.info-card {
+  height: fit-content;
+}
