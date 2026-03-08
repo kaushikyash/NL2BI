@@ -1,5 +1,5 @@
 CREATE DATABASE manufacturing_dw ENGINE = Atomic COMMENT 'Manufacturing data warehouse for production, inventory, procurement, quality, and shipments';
-    `term_type` String COMMENT 'Type of canonical term such as table, column, dimension, measure, kpi, filter_value, business_term, or abbreviation',
+    `term_type` String COMMENT 'Type of canonical term such as table, column, dimension, measure, kpi, filter_value, business_term, or abbreviation';
 
 CREATE TABLE manufacturing_dw.ai_business_synonyms (
     `synonym` String COMMENT 'Word or phrase a user may type in natural language, such as factory, FG, vendor, or stock on hand',
