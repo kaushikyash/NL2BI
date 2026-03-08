@@ -1,32 +1,554 @@
-CREATE DATABASE manufacturing_dw\nENGINE = Atomic\nCOMMENT \'Manufacturing data warehouse for production, inventory, procurement, quality, and shipments\'
-CREATE TABLE manufacturing_dw.ai_business_synonyms\n(\n    `synonym` String COMMENT \'Word or phrase a user may type in natural language, such as factory, FG, vendor, or stock on hand\',\n    `canonical_term` String COMMENT \'Standard business term the synonym should map to, such as plant, finished_good, supplier, or inventory_on_hand\',\n    `term_type` String COMMENT \'Type of canonical term such as table, column, dimension, measure, kpi, filter_value, business_term, or abbreviation\',\n    `target_table` String COMMENT \'Primary physical table related to the canonical term; blank when not applicable\',\n    `target_column` String COMMENT \'Primary physical column related to the canonical term; blank when not applicable\',\n    `target_value` String COMMENT \'Suggested filter value or business value when the synonym refers to a specific coded meaning\',\n    `domain` String COMMENT \'Business domain such as inventory, production, procurement, quality, shipment, bom, or general\',\n    `confidence_score` Decimal(5, 2) COMMENT \'Confidence score from 0 to 1 indicating how strongly this synonym maps to the canonical term\',\n    `usage_note` String COMMENT \'Explanation for AI on how to use the mapping in SQL generation or business interpretation\',\n    `is_active` UInt8 COMMENT \'Flag indicating whether this synonym is currently active and should be used by the AI\'\n)\nENGINE = MergeTree\nORDER BY (lower(synonym), term_type, target_table, target_column)\nSETTINGS index_granularity = 8192\nCOMMENT \'Business synonym and vocabulary mapping table used by AI to translate user language into manufacturing warehouse schema terms\'
-CREATE TABLE manufacturing_dw.ai_example_questions\n(\n    `domain` String COMMENT \'Business domain such as inventory, procurement, production, quality, or shipment\',\n    `question_text` String COMMENT \'Natural-language question users may ask\',\n    `primary_table` String COMMENT \'Main table expected to answer the question\',\n    `related_tables` String COMMENT \'Comma-separated list of commonly joined supporting tables\',\n    `expected_grouping` String COMMENT \'Typical grouping or breakdown needed for the answer\',\n    `expected_filters` String COMMENT \'Typical date or business filters used in the question\',\n    `notes` String COMMENT \'Extra notes for AI prompt engineering and SQL generation\'\n)\nENGINE = MergeTree\nORDER BY (domain, primary_table)\nSETTINGS index_granularity = 8192
-CREATE TABLE manufacturing_dw.ai_sql_templates\n(\n    `template_name` String COMMENT \'Unique name of the SQL template\',\n    `template_category` String COMMENT \'Business category such as inventory, procurement, production, quality, shipment, bom, or general\',\n    `business_question` String COMMENT \'Natural-language business question this template is intended to answer\',\n    `intent_type` String COMMENT \'Intent type such as summary, trend, ranking, detail, root_cause, or lookup\',\n    `primary_table` String COMMENT \'Main fact or bridge table used by the template\',\n    `related_tables` String COMMENT \'Comma-separated list of dimension or supporting tables typically joined in the query\',\n    `primary_time_column` String COMMENT \'Preferred time column to use for date filtering in this template\',\n    `grain_description` String COMMENT \'Business grain expected before aggregation\',\n    `required_filters` String COMMENT \'Comma-separated list of filters that should usually be applied\',\n    `optional_filters` String COMMENT \'Comma-separated list of optional filters commonly used with the template\',\n    `grouping_columns` String COMMENT \'Comma-separated list of typical grouping columns for the query\',\n    `measure_logic` String COMMENT \'Description of the aggregation or KPI logic used in the query\',\n    `sql_template` String COMMENT \'Parameterized SQL template for AI-generated queries\',\n    `result_notes` String COMMENT \'Guidance on interpreting the output of the query\',\n    `caveats` String COMMENT \'Warnings about grain, snapshot logic, or business interpretation\',\n    `is_active` UInt8 COMMENT \'Flag indicating whether the template is active and approved for AI use\'\n)\nENGINE = MergeTree\nORDER BY (template_category, template_name)\nSETTINGS index_granularity = 8192\nCOMMENT \'Approved SQL template library for AI-generated analytics queries in the manufacturing warehouse\'
-CREATE TABLE manufacturing_dw.bom_component\n(\n    `parent_product_key` UInt32 COMMENT \'Foreign key to dim_product for the parent assembly or finished good\',\n    `component_product_key` UInt32 COMMENT \'Foreign key to dim_product for the child component or raw material\',\n    `plant_key` UInt32 COMMENT \'Foreign key to dim_plant where this bill of material is valid\',\n    `bom_version` String COMMENT \'Version identifier of the bill of material\',\n    `component_quantity` Decimal(18, 4) COMMENT \'Required component quantity to produce one base quantity of the parent product\',\n    `component_uom` String COMMENT \'Unit of measure of the component quantity\',\n    `scrap_factor_pct` Decimal(9, 4) COMMENT \'Expected scrap percentage for the component in the manufacturing process\',\n    `valid_from` Date COMMENT \'Date from which the BOM component row is valid\',\n    `valid_to` Date COMMENT \'Date until which the BOM component row is valid\',\n    `is_current` UInt8 COMMENT \'Flag indicating whether this BOM row is currently active\'\n)\nENGINE = MergeTree\nORDER BY (parent_product_key, component_product_key, plant_key, bom_version, valid_from)\nSETTINGS index_granularity = 8192\nCOMMENT \'Bridge table representing the bill of materials between parent products and component products\'
-CREATE TABLE manufacturing_dw.dim_customer\n(\n    `customer_key` UInt32 COMMENT \'Surrogate key for the customer dimension\',\n    `customer_id` String COMMENT \'Business identifier of the customer from ERP or CRM\',\n    `customer_name` String COMMENT \'Customer legal or trading name\',\n    `customer_segment` String COMMENT \'Business segment of the customer such as retail, industrial, or distributor\',\n    `country` String COMMENT \'Customer country\',\n    `region` String COMMENT \'Customer sales region\',\n    `channel` String COMMENT \'Sales channel such as direct, distributor, e-commerce, or OEM\',\n    `is_active` UInt8 COMMENT \'Flag indicating whether the customer is active\',\n    `valid_from` Date COMMENT \'Start date when this dimension row became valid\',\n    `valid_to` Date COMMENT \'End date when this dimension row stopped being valid\',\n    `is_current` UInt8 COMMENT \'Flag indicating whether this is the current active version of the dimension row\'\n)\nENGINE = MergeTree\nORDER BY customer_key\nSETTINGS index_granularity = 8192\nCOMMENT \'Dimension table with customer master data for outbound shipments\'
-CREATE TABLE manufacturing_dw.dim_date\n(\n    `date_key` UInt32 COMMENT \'Integer date key in YYYYMMDD format\',\n    `full_date` Date COMMENT \'Calendar date\',\n    `year` UInt16 COMMENT \'Calendar year number\',\n    `quarter` UInt8 COMMENT \'Calendar quarter number from 1 to 4\',\n    `month` UInt8 COMMENT \'Calendar month number from 1 to 12\',\n    `month_name` String COMMENT \'Calendar month name\',\n    `week_of_year` UInt8 COMMENT \'ISO week number within the year\',\n    `day_of_month` UInt8 COMMENT \'Day number within the month\',\n    `day_of_week` UInt8 COMMENT \'Day number within the week where Monday is 1 and Sunday is 7\',\n    `day_name` String COMMENT \'Calendar day name\',\n    `is_weekend` UInt8 COMMENT \'Flag indicating whether the date falls on a weekend\'\n)\nENGINE = MergeTree\nORDER BY date_key\nSETTINGS index_granularity = 8192\nCOMMENT \'Calendar date dimension used for reporting and time-based analysis\'
-CREATE TABLE manufacturing_dw.dim_plant\n(\n    `plant_key` UInt32 COMMENT \'Surrogate key for the plant dimension\',\n    `plant_id` String COMMENT \'Business identifier of the plant from the source ERP or MES system\',\n    `plant_name` String COMMENT \'Human-readable name of the manufacturing plant\',\n    `country` String COMMENT \'Country where the plant is located\',\n    `state_region` String COMMENT \'State, province, or region of the plant\',\n    `city` String COMMENT \'City where the plant is located\',\n    `timezone` String COMMENT \'Local timezone used by the plant for operations and reporting\',\n    `plant_type` String COMMENT \'Type of plant such as assembly, fabrication, packaging, or distribution\',\n    `is_active` UInt8 COMMENT \'Flag indicating whether the plant is currently active; 1 means active, 0 means inactive\',\n    `valid_from` Date COMMENT \'Start date when this dimension row became valid\',\n    `valid_to` Date COMMENT \'End date when this dimension row stopped being valid; use a far-future date for current row\',\n    `is_current` UInt8 COMMENT \'Flag indicating whether this is the current active version of the dimension row\'\n)\nENGINE = MergeTree\nORDER BY plant_key\nSETTINGS index_granularity = 8192\nCOMMENT \'Dimension table with descriptive information about manufacturing plants\'
-CREATE TABLE manufacturing_dw.dim_product\n(\n    `product_key` UInt32 COMMENT \'Surrogate key for the product dimension\',\n    `product_id` String COMMENT \'Business identifier of the product, item, or material from ERP or PLM\',\n    `product_name` String COMMENT \'Human-readable name of the product or material\',\n    `product_type` String COMMENT \'Type of item such as raw_material, component, subassembly, finished_good, or consumable\',\n    `product_family` String COMMENT \'Higher-level grouping used for analytics and reporting\',\n    `product_category` String COMMENT \'Category used by business stakeholders for planning and reporting\',\n    `base_uom` String COMMENT \'Base unit of measure used for inventory and costing\',\n    `standard_cost` Decimal(18, 4) COMMENT \'Standard cost per base unit\',\n    `standard_price` Decimal(18, 4) COMMENT \'Standard selling price per base unit where applicable\',\n    `weight_kg` Decimal(18, 4) COMMENT \'Weight of one base unit in kilograms\',\n    `shelf_life_days` UInt32 COMMENT \'Expected shelf life in days; 0 when shelf life is not applicable\',\n    `is_batch_tracked` UInt8 COMMENT \'Flag indicating whether the product is tracked by batch or lot\',\n    `is_serial_tracked` UInt8 COMMENT \'Flag indicating whether the product is tracked by serial number\',\n    `is_active` UInt8 COMMENT \'Flag indicating whether the product is active\',\n    `valid_from` Date COMMENT \'Start date when this dimension row became valid\',\n    `valid_to` Date COMMENT \'End date when this dimension row stopped being valid\',\n    `is_current` UInt8 COMMENT \'Flag indicating whether this is the current active version of the dimension row\'\n)\nENGINE = MergeTree\nORDER BY product_key\nSETTINGS index_granularity = 8192\nCOMMENT \'Dimension table with product, material, and item master attributes\'
-CREATE TABLE manufacturing_dw.dim_supplier\n(\n    `supplier_key` UInt32 COMMENT \'Surrogate key for the supplier dimension\',\n    `supplier_id` String COMMENT \'Business identifier of the supplier from the procurement or ERP system\',\n    `supplier_name` String COMMENT \'Supplier legal or trading name\',\n    `supplier_category` String COMMENT \'Supplier category such as raw_material, packaging, tooling, or logistics\',\n    `country` String COMMENT \'Country where the supplier is based\',\n    `lead_time_days` UInt16 COMMENT \'Standard supplier lead time in days for delivered materials\',\n    `payment_terms` String COMMENT \'Commercial payment terms agreed with the supplier\',\n    `quality_rating` Decimal(5, 2) COMMENT \'Internal quality score assigned to the supplier\',\n    `is_preferred` UInt8 COMMENT \'Flag indicating whether the supplier is preferred; 1 means preferred\',\n    `is_active` UInt8 COMMENT \'Flag indicating whether the supplier is active; 1 means active, 0 means inactive\',\n    `valid_from` Date COMMENT \'Start date when this dimension row became valid\',\n    `valid_to` Date COMMENT \'End date when this dimension row stopped being valid\',\n    `is_current` UInt8 COMMENT \'Flag indicating whether this is the current active version of the dimension row\'\n)\nENGINE = MergeTree\nORDER BY supplier_key\nSETTINGS index_granularity = 8192\nCOMMENT \'Dimension table with supplier master data and sourcing attributes\'
-CREATE TABLE manufacturing_dw.dim_warehouse\n(\n    `warehouse_key` UInt32 COMMENT \'Surrogate key for the warehouse dimension\',\n    `warehouse_id` String COMMENT \'Business identifier of the warehouse or storage location\',\n    `warehouse_name` String COMMENT \'Human-readable warehouse name\',\n    `plant_key` UInt32 COMMENT \'Foreign key to dim_plant indicating which plant owns or uses the warehouse\',\n    `warehouse_type` String COMMENT \'Warehouse type such as raw_material, wip, finished_goods, spare_parts, or quarantine\',\n    `temperature_zone` String COMMENT \'Storage temperature category such as ambient, chilled, or frozen\',\n    `capacity_units` Decimal(18, 2) COMMENT \'Declared storage capacity in warehouse-defined units\',\n    `capacity_uom` String COMMENT \'Unit of measure for capacity such as pallets, bins, or cubic_meters\',\n    `is_active` UInt8 COMMENT \'Flag indicating whether the warehouse is active; 1 means active, 0 means inactive\',\n    `valid_from` Date COMMENT \'Start date when this dimension row became valid\',\n    `valid_to` Date COMMENT \'End date when this dimension row stopped being valid\',\n    `is_current` UInt8 COMMENT \'Flag indicating whether this is the current active version of the dimension row\'\n)\nENGINE = MergeTree\nORDER BY warehouse_key\nSETTINGS index_granularity = 8192\nCOMMENT \'Dimension table with descriptive information about warehouses and storage areas\'
-CREATE TABLE manufacturing_dw.dim_work_center\n(\n    `work_center_key` UInt32 COMMENT \'Surrogate key for the work center dimension\',\n    `work_center_id` String COMMENT \'Business identifier of the work center or machine group\',\n    `plant_key` UInt32 COMMENT \'Foreign key to dim_plant indicating where the work center operates\',\n    `work_center_name` String COMMENT \'Human-readable name of the work center\',\n    `department_name` String COMMENT \'Department or production area responsible for the work center\',\n    `work_center_type` String COMMENT \'Type of work center such as machining, welding, assembly, paint, or packaging\',\n    `capacity_hours_per_day` Decimal(10, 2) COMMENT \'Nominal available production hours per day\',\n    `is_bottleneck` UInt8 COMMENT \'Flag indicating whether the work center is considered a production bottleneck\',\n    `is_active` UInt8 COMMENT \'Flag indicating whether the work center is active\',\n    `valid_from` Date COMMENT \'Start date when this dimension row became valid\',\n    `valid_to` Date COMMENT \'End date when this dimension row stopped being valid\',\n    `is_current` UInt8 COMMENT \'Flag indicating whether this is the current active version of the dimension row\'\n)\nENGINE = MergeTree\nORDER BY work_center_key\nSETTINGS index_granularity = 8192\nCOMMENT \'Dimension table with work center and machine group attributes\'
-CREATE TABLE manufacturing_dw.fact_inventory_snapshot\n(\n    `snapshot_ts` DateTime COMMENT \'Timestamp when the inventory snapshot was taken\',\n    `date_key` UInt32 COMMENT \'Foreign key to dim_date for the snapshot date\',\n    `plant_key` UInt32 COMMENT \'Foreign key to dim_plant for the plant holding the stock\',\n    `warehouse_key` UInt32 COMMENT \'Foreign key to dim_warehouse for the storage location\',\n    `product_key` UInt32 COMMENT \'Foreign key to dim_product for the stocked item\',\n    `batch_number` String COMMENT \'Batch or lot identifier when batch tracking is enabled\',\n    `quantity_on_hand` Decimal(18, 4) COMMENT \'Physical quantity currently on hand\',\n    `quantity_reserved` Decimal(18, 4) COMMENT \'Quantity reserved for production or customer demand\',\n    `quantity_available` Decimal(18, 4) COMMENT \'Quantity available for use after reservations\',\n    `inventory_uom` String COMMENT \'Unit of measure of the inventory quantities\',\n    `inventory_value` Decimal(18, 4) COMMENT \'Extended inventory value for the available stock according to costing rules\'\n)\nENGINE = MergeTree\nPARTITION BY toYYYYMM(snapshot_ts)\nORDER BY (snapshot_ts, plant_key, warehouse_key, product_key, batch_number)\nSETTINGS index_granularity = 8192\nCOMMENT \'Snapshot fact table with inventory balances by time, plant, warehouse, product, and batch\'
-CREATE TABLE manufacturing_dw.fact_material_receipt\n(\n    `receipt_id` String COMMENT \'Unique identifier for the material receipt transaction\',\n    `receipt_ts` DateTime COMMENT \'Timestamp when the receipt was posted\',\n    `date_key` UInt32 COMMENT \'Foreign key to dim_date for the receipt date\',\n    `supplier_key` UInt32 COMMENT \'Foreign key to dim_supplier for the supplier that delivered the material\',\n    `plant_key` UInt32 COMMENT \'Foreign key to dim_plant for the receiving plant\',\n    `warehouse_key` UInt32 COMMENT \'Foreign key to dim_warehouse for the receiving storage location\',\n    `product_key` UInt32 COMMENT \'Foreign key to dim_product for the received item\',\n    `purchase_order_number` String COMMENT \'Purchase order number associated with the receipt\',\n    `purchase_order_line` UInt32 COMMENT \'Purchase order line number associated with the receipt\',\n    `batch_number` String COMMENT \'Supplier or internal batch number assigned to the received lot\',\n    `quantity_received` Decimal(18, 4) COMMENT \'Quantity physically received\',\n    `quantity_accepted` Decimal(18, 4) COMMENT \'Quantity accepted after inspection\',\n    `quantity_rejected` Decimal(18, 4) COMMENT \'Quantity rejected during receipt or inspection\',\n    `receipt_uom` String COMMENT \'Unit of measure of the receipt quantities\',\n    `unit_cost` Decimal(18, 4) COMMENT \'Unit cost recorded at receipt\',\n    `total_cost` Decimal(18, 4) COMMENT \'Extended total receipt cost\'\n)\nENGINE = MergeTree\nPARTITION BY toYYYYMM(receipt_ts)\nORDER BY (receipt_ts, plant_key, warehouse_key, supplier_key, product_key, receipt_id)\nSETTINGS index_granularity = 8192\nCOMMENT \'Transactional fact table with inbound supplier receipts and receiving quality outcomes\'
-CREATE TABLE manufacturing_dw.fact_production_operation\n(\n    `production_order_id` String COMMENT \'Identifier of the production order this operation belongs to\',\n    `operation_sequence` UInt16 COMMENT \'Sequence number of the operation within the routing\',\n    `work_center_key` UInt32 COMMENT \'Foreign key to dim_work_center where the operation was executed\',\n    `plant_key` UInt32 COMMENT \'Foreign key to dim_plant where the operation was executed\',\n    `product_key` UInt32 COMMENT \'Foreign key to dim_product being produced during the operation\',\n    `operation_name` String COMMENT \'Human-readable operation name such as cutting, welding, or assembly\',\n    `operation_status` String COMMENT \'Current status of the operation such as queued, running, completed, or failed\',\n    `setup_time_minutes` Decimal(12, 2) COMMENT \'Actual setup time consumed by the operation in minutes\',\n    `run_time_minutes` Decimal(12, 2) COMMENT \'Actual run time consumed by the operation in minutes\',\n    `downtime_minutes` Decimal(12, 2) COMMENT \'Downtime experienced during the operation in minutes\',\n    `labor_hours` Decimal(12, 2) COMMENT \'Direct labor hours charged to the operation\',\n    `machine_hours` Decimal(12, 2) COMMENT \'Machine hours charged to the operation\',\n    `good_quantity` Decimal(18, 4) COMMENT \'Quantity produced successfully by the operation\',\n    `scrap_quantity` Decimal(18, 4) COMMENT \'Quantity scrapped during the operation\',\n    `event_ts` DateTime COMMENT \'Timestamp representing the most important event time for this operation record\'\n)\nENGINE = MergeTree\nPARTITION BY toYYYYMM(event_ts)\nORDER BY (event_ts, production_order_id, operation_sequence)\nSETTINGS index_granularity = 8192\nCOMMENT \'Fact table with operation-level execution metrics such as runtime, downtime, and output\'
-CREATE TABLE manufacturing_dw.fact_production_order\n(\n    `production_order_id` String COMMENT \'Unique identifier of the production order or work order\',\n    `order_status` String COMMENT \'Current status such as planned, released, in_progress, completed, or cancelled\',\n    `plant_key` UInt32 COMMENT \'Foreign key to dim_plant where the order is produced\',\n    `product_key` UInt32 COMMENT \'Foreign key to dim_product for the finished good or assembly being produced\',\n    `planned_start_ts` DateTime COMMENT \'Planned start timestamp of the production order\',\n    `planned_end_ts` DateTime COMMENT \'Planned completion timestamp of the production order\',\n    `actual_start_ts` Nullable(DateTime) COMMENT \'Actual start timestamp when execution began\',\n    `actual_end_ts` Nullable(DateTime) COMMENT \'Actual completion timestamp when execution ended\',\n    `due_date_key` UInt32 COMMENT \'Foreign key to dim_date for the committed due date\',\n    `order_quantity` Decimal(18, 4) COMMENT \'Planned production quantity\',\n    `completed_quantity` Decimal(18, 4) COMMENT \'Quantity completed and reported as good output\',\n    `scrapped_quantity` Decimal(18, 4) COMMENT \'Quantity scrapped or lost during production\',\n    `order_uom` String COMMENT \'Unit of measure of order quantities\',\n    `standard_cost_total` Decimal(18, 4) COMMENT \'Expected standard total cost of the production order\',\n    `actual_cost_total` Decimal(18, 4) COMMENT \'Actual accumulated total cost of the production order\'\n)\nENGINE = MergeTree\nPARTITION BY toYYYYMM(planned_start_ts)\nORDER BY (plant_key, production_order_id)\nSETTINGS index_granularity = 8192\nCOMMENT \'Fact table with production order planning, execution, output, and cost metrics\'
-CREATE TABLE manufacturing_dw.fact_quality_inspection\n(\n    `inspection_id` String COMMENT \'Unique identifier of the quality inspection event\',\n    `inspection_ts` DateTime COMMENT \'Timestamp when the inspection occurred\',\n    `date_key` UInt32 COMMENT \'Foreign key to dim_date for the inspection date\',\n    `plant_key` UInt32 COMMENT \'Foreign key to dim_plant where the inspection occurred\',\n    `product_key` UInt32 COMMENT \'Foreign key to dim_product being inspected\',\n    `supplier_key` UInt32 COMMENT \'Foreign key to dim_supplier when the inspection is related to incoming material; use 0 or unknown when not applicable\',\n    `production_order_id` String COMMENT \'Production order associated with the inspection when applicable\',\n    `batch_number` String COMMENT \'Batch or lot number being inspected\',\n    `inspection_type` String COMMENT \'Type of inspection such as incoming, in_process, final, or audit\',\n    `defect_code` String COMMENT \'Defect code observed during inspection\',\n    `defect_description` String COMMENT \'Human-readable description of the observed defect\',\n    `inspected_quantity` Decimal(18, 4) COMMENT \'Total quantity inspected\',\n    `accepted_quantity` Decimal(18, 4) COMMENT \'Quantity accepted after inspection\',\n    `rejected_quantity` Decimal(18, 4) COMMENT \'Quantity rejected after inspection\',\n    `reworked_quantity` Decimal(18, 4) COMMENT \'Quantity sent to rework after inspection\',\n    `inspection_result` String COMMENT \'Overall result such as pass, fail, conditional_pass, or rework\'\n)\nENGINE = MergeTree\nPARTITION BY toYYYYMM(inspection_ts)\nORDER BY (inspection_ts, plant_key, product_key, inspection_id)\nSETTINGS index_granularity = 8192\nCOMMENT \'Fact table with incoming, in-process, and final quality inspection results\'
-CREATE TABLE manufacturing_dw.fact_shipment\n(\n    `shipment_id` String COMMENT \'Unique identifier of the outbound shipment\',\n    `shipment_ts` DateTime COMMENT \'Timestamp when the shipment was posted or dispatched\',\n    `date_key` UInt32 COMMENT \'Foreign key to dim_date for the shipment date\',\n    `customer_key` UInt32 COMMENT \'Foreign key to dim_customer receiving the goods\',\n    `plant_key` UInt32 COMMENT \'Foreign key to dim_plant shipping the goods\',\n    `warehouse_key` UInt32 COMMENT \'Foreign key to dim_warehouse from which the goods were shipped\',\n    `product_key` UInt32 COMMENT \'Foreign key to dim_product being shipped\',\n    `sales_order_number` String COMMENT \'Sales order number associated with the shipment\',\n    `sales_order_line` UInt32 COMMENT \'Sales order line number associated with the shipment\',\n    `batch_number` String COMMENT \'Batch or lot number shipped when applicable\',\n    `shipped_quantity` Decimal(18, 4) COMMENT \'Quantity shipped to the customer\',\n    `shipment_uom` String COMMENT \'Unit of measure of the shipped quantity\',\n    `net_sales_amount` Decimal(18, 4) COMMENT \'Net sales amount recognized for the shipment excluding tax\',\n    `freight_amount` Decimal(18, 4) COMMENT \'Freight amount charged or allocated to the shipment\'\n)\nENGINE = MergeTree\nPARTITION BY toYYYYMM(shipment_ts)\nORDER BY (shipment_ts, customer_key, product_key, shipment_id)\nSETTINGS index_granularity = 8192\nCOMMENT \'Transactional fact table with outbound customer shipments and commercial amounts\'
-CREATE TABLE manufacturing_dw.kpi_definitions\n(\n    `kpi_name` String COMMENT \'Business-friendly KPI name\',\n    `kpi_category` String COMMENT \'Category such as inventory, production, quality, procurement, or shipment\',\n    `source_table` String COMMENT \'Primary table used to calculate the KPI\',\n    `grain_note` String COMMENT \'Required grain or aggregation guidance before computing the KPI\',\n    `formula_sql` String COMMENT \'SQL expression or pseudo-SQL used to calculate the KPI\',\n    `numerator_definition` String COMMENT \'Business meaning of the numerator if applicable\',\n    `denominator_definition` String COMMENT \'Business meaning of the denominator if applicable\',\n    `unit_of_measure` String COMMENT \'Output unit such as percent, quantity, currency, hours, or ratio\',\n    `preferred_time_column` String COMMENT \'Recommended time column for trend analysis\',\n    `dimensions_supported` String COMMENT \'Comma-separated list of dimensions commonly used with this KPI\',\n    `filters_supported` String COMMENT \'Comma-separated list of recommended filters for this KPI\',\n    `interpretation` String COMMENT \'Human-readable explanation of what high or low values mean\',\n    `caveats` String COMMENT \'Warnings about data quality, grain mismatch, or interpretation limits\'\n)\nENGINE = MergeTree\nORDER BY (kpi_category, kpi_name)\nSETTINGS index_granularity = 8192
-CREATE TABLE manufacturing_dw.table_ai_context\n(\n    `database_name` String COMMENT \'Database that owns the table\',\n    `table_name` String COMMENT \'Physical table name\',\n    `table_role` String COMMENT \'High-level role of the table such as dimension, fact, bridge, metadata, or view\',\n    `business_grain` String COMMENT \'Lowest level of detail represented by one row in the table\',\n    `business_purpose` String COMMENT \'Business reason the table exists and how it should be used\',\n    `primary_time_column` String COMMENT \'Main timestamp or date column to use for time filtering; blank if not applicable\',\n    `default_dimensions` String COMMENT \'Comma-separated list of common dimension columns used for grouping and filtering\',\n    `default_measures` String COMMENT \'Comma-separated list of common numeric measures used for aggregations\',\n    `common_filters` String COMMENT \'Comma-separated list of recommended business filters for this table\',\n    `join_instructions` String COMMENT \'Human-readable guidance on how this table should be joined to related tables\',\n    `data_freshness_expectation` String COMMENT \'Expected refresh cadence such as realtime, hourly, daily, or snapshot\',\n    `ai_usage_notes` String COMMENT \'Extra instructions for AI tools on how to interpret or prioritize the table\'\n)\nENGINE = MergeTree\nORDER BY (database_name, table_name)\nSETTINGS index_granularity = 8192
-CREATE TABLE manufacturing_dw.table_descriptions\n(\n    `database_name` String COMMENT \'Database name that owns the table\',\n    `table_name` String COMMENT \'Physical table name\',\n    `table_description` String COMMENT \'Business description of the table and how it should be used by analytics or AI\'\n)\nENGINE = MergeTree\nORDER BY (database_name, table_name)\nSETTINGS index_granularity = 8192\nCOMMENT \'Registry table containing table-level business descriptions for the warehouse\'
-CREATE VIEW manufacturing_dw.v_ai_business_synonyms\n(\n    `synonym` String,\n    `canonical_term` String,\n    `term_type` String,\n    `target_table` String,\n    `target_column` String,\n    `target_value` String,\n    `domain` String,\n    `confidence_score` Decimal(5, 2),\n    `usage_note` String,\n    `is_active` UInt8\n)\nAS SELECT\n    synonym,\n    canonical_term,\n    term_type,\n    target_table,\n    target_column,\n    target_value,\n    domain,\n    confidence_score,\n    usage_note,\n    is_active\nFROM manufacturing_dw.ai_business_synonyms\nWHERE is_active = 1
-CREATE VIEW manufacturing_dw.v_ai_questions\n(\n    `domain` String,\n    `question_text` String,\n    `primary_table` String,\n    `related_tables` String,\n    `expected_grouping` String,\n    `expected_filters` String,\n    `notes` String\n)\nAS SELECT *\nFROM manufacturing_dw.ai_example_questions\nORDER BY\n    domain ASC,\n    question_text ASC
-CREATE VIEW manufacturing_dw.v_ai_semantic_catalog\n(\n    `database_name` String,\n    `table_name` String,\n    `native_table_comment` String,\n    `table_description` String,\n    `table_role` String,\n    `business_grain` String,\n    `business_purpose` String,\n    `primary_time_column` String,\n    `default_dimensions` String,\n    `default_measures` String,\n    `common_filters` String,\n    `join_instructions` String,\n    `data_freshness_expectation` String,\n    `ai_usage_notes` String,\n    `column_position` UInt64,\n    `column_name` String,\n    `column_type` String,\n    `column_description` String\n)\nAS SELECT\n    c.database AS database_name,\n    c.`table` AS table_name,\n    t.comment AS native_table_comment,\n    td.table_description,\n    a.table_role,\n    a.business_grain,\n    a.business_purpose,\n    a.primary_time_column,\n    a.default_dimensions,\n    a.default_measures,\n    a.common_filters,\n    a.join_instructions,\n    a.data_freshness_expectation,\n    a.ai_usage_notes,\n    c.position AS column_position,\n    c.name AS column_name,\n    c.type AS column_type,\n    c.comment AS column_description\nFROM system.columns AS c\nLEFT JOIN system.tables AS t ON (c.database = t.database) AND (c.`table` = t.name)\nLEFT JOIN manufacturing_dw.table_descriptions AS td ON (c.database = td.database_name) AND (c.`table` = td.table_name)\nLEFT JOIN manufacturing_dw.table_ai_context AS a ON (c.database = a.database_name) AND (c.`table` = a.table_name)\nWHERE c.database = \'manufacturing_dw\'\nORDER BY\n    c.`table` ASC,\n    c.position ASC
-CREATE VIEW manufacturing_dw.v_ai_sql_templates\n(\n    `template_name` String,\n    `template_category` String,\n    `business_question` String,\n    `intent_type` String,\n    `primary_table` String,\n    `related_tables` String,\n    `primary_time_column` String,\n    `grain_description` String,\n    `required_filters` String,\n    `optional_filters` String,\n    `grouping_columns` String,\n    `measure_logic` String,\n    `sql_template` String,\n    `result_notes` String,\n    `caveats` String,\n    `is_active` UInt8\n)\nAS SELECT\n    template_name,\n    template_category,\n    business_question,\n    intent_type,\n    primary_table,\n    related_tables,\n    primary_time_column,\n    grain_description,\n    required_filters,\n    optional_filters,\n    grouping_columns,\n    measure_logic,\n    sql_template,\n    result_notes,\n    caveats,\n    is_active\nFROM manufacturing_dw.ai_sql_templates\nWHERE is_active = 1
-CREATE VIEW manufacturing_dw.v_ai_sql_templates_summary\n(\n    `template_category` String,\n    `template_name` String,\n    `business_question` String,\n    `intent_type` String,\n    `primary_table` String,\n    `primary_time_column` String,\n    `grouping_columns` String,\n    `measure_logic` String\n)\nAS SELECT\n    template_category,\n    template_name,\n    business_question,\n    intent_type,\n    primary_table,\n    primary_time_column,\n    grouping_columns,\n    measure_logic\nFROM manufacturing_dw.ai_sql_templates\nWHERE is_active = 1\nORDER BY\n    template_category ASC,\n    template_name ASC
-CREATE VIEW manufacturing_dw.v_ai_synonyms_by_column\n(\n    `target_table` String,\n    `target_column` String,\n    `synonyms` Array(String),\n    `canonical_terms` Array(String)\n)\nAS SELECT\n    target_table,\n    target_column,\n    groupArray(synonym) AS synonyms,\n    groupArray(canonical_term) AS canonical_terms\nFROM manufacturing_dw.ai_business_synonyms\nWHERE (is_active = 1) AND (target_table != \'\') AND (target_column != \'\')\nGROUP BY\n    target_table,\n    target_column
-CREATE VIEW manufacturing_dw.v_ai_synonyms_by_table\n(\n    `target_table` String,\n    `synonyms` Array(String),\n    `canonical_terms` Array(String)\n)\nAS SELECT\n    target_table,\n    groupArray(synonym) AS synonyms,\n    groupArray(canonical_term) AS canonical_terms\nFROM manufacturing_dw.ai_business_synonyms\nWHERE (is_active = 1) AND (target_table != \'\')\nGROUP BY target_table
-CREATE VIEW manufacturing_dw.v_ai_vocabulary_catalog\n(\n    `synonym` String,\n    `canonical_term` String,\n    `term_type` String,\n    `domain` String,\n    `target_table` String,\n    `target_column` String,\n    `target_value` String,\n    `confidence_score` Decimal(5, 2),\n    `usage_note` String,\n    `table_role` String,\n    `business_grain` String,\n    `business_purpose` String,\n    `primary_time_column` String\n)\nAS SELECT\n    s.synonym,\n    s.canonical_term,\n    s.term_type,\n    s.domain,\n    s.target_table,\n    s.target_column,\n    s.target_value,\n    s.confidence_score,\n    s.usage_note,\n    tc.table_role,\n    tc.business_grain,\n    tc.business_purpose,\n    tc.primary_time_column\nFROM manufacturing_dw.ai_business_synonyms AS s\nLEFT JOIN manufacturing_dw.table_ai_context AS tc ON (s.target_table = tc.table_name) AND (tc.database_name = \'manufacturing_dw\')\nWHERE s.is_active = 1
-CREATE VIEW manufacturing_dw.v_data_dictionary\n(\n    `database_name` String,\n    `table_name` String,\n    `table_description` String,\n    `column_position` UInt64,\n    `column_name` String,\n    `column_type` String,\n    `column_description` String\n)\nAS SELECT\n    c.database AS database_name,\n    c.`table` AS table_name,\n    td.table_description,\n    c.position AS column_position,\n    c.name AS column_name,\n    c.type AS column_type,\n    c.comment AS column_description\nFROM system.columns AS c\nLEFT JOIN manufacturing_dw.table_descriptions AS td ON (c.database = td.database_name) AND (c.`table` = td.table_name)\nWHERE c.database = \'manufacturing_dw\'\nORDER BY\n    table_name ASC,\n    column_position ASC
-CREATE VIEW manufacturing_dw.v_kpi_catalog\n(\n    `kpi_name` String,\n    `kpi_category` String,\n    `source_table` String,\n    `grain_note` String,\n    `formula_sql` String,\n    `numerator_definition` String,\n    `denominator_definition` String,\n    `unit_of_measure` String,\n    `preferred_time_column` String,\n    `dimensions_supported` String,\n    `filters_supported` String,\n    `interpretation` String,\n    `caveats` String\n)\nAS SELECT *\nFROM manufacturing_dw.kpi_definitions\nORDER BY\n    kpi_category ASC,\n    kpi_name ASC
-CREATE VIEW manufacturing_dw.v_table_catalog\n(\n    `database_name` String,\n    `table_name` String,\n    `engine` String,\n    `native_table_comment` String,\n    `table_description` String,\n    `table_role` String,\n    `business_grain` String,\n    `business_purpose` String,\n    `primary_time_column` String,\n    `default_dimensions` String,\n    `default_measures` String,\n    `common_filters` String,\n    `join_instructions` String,\n    `data_freshness_expectation` String,\n    `ai_usage_notes` String\n)\nAS SELECT\n    t.database AS database_name,\n    t.name AS table_name,\n    t.engine,\n    t.comment AS native_table_comment,\n    td.table_description,\n    a.table_role,\n    a.business_grain,\n    a.business_purpose,\n    a.primary_time_column,\n    a.default_dimensions,\n    a.default_measures,\n    a.common_filters,\n    a.join_instructions,\n    a.data_freshness_expectation,\n    a.ai_usage_notes\nFROM system.tables AS t\nLEFT JOIN manufacturing_dw.table_descriptions AS td ON (t.database = td.database_name) AND (t.name = td.table_name)\nLEFT JOIN manufacturing_dw.table_ai_context AS a ON (t.database = a.database_name) AND (t.name = a.table_name)\nWHERE t.database = \'manufacturing_dw\'\nORDER BY t.name ASC
+CREATE DATABASE manufacturing_dw
+ENGINE = Atomic
+COMMENT 'Manufacturing data warehouse for production, inventory, procurement, quality, and shipments';
+
+CREATE TABLE manufacturing_dw.ai_business_synonyms (
+    `synonym` String COMMENT 'Word or phrase a user may type in natural language, such as factory, FG, vendor, or stock on hand',
+    `canonical_term` String COMMENT 'Standard business term the synonym should map to, such as plant, finished_good, supplier, or inventory_on_hand',
+    `term_type` String COMMENT 'Type of canonical term such as table, column, dimension, measure, kpi, filter_value, business_term, or abbreviation',
+    `target_table` String COMMENT 'Primary physical table related to the canonical term; blank when not applicable',
+    `target_column` String COMMENT 'Primary physical column related to the canonical term; blank when not applicable',
+    `target_value` String COMMENT 'Suggested filter value or business value when the synonym refers to a specific coded meaning',
+    `domain` String COMMENT 'Business domain such as inventory, production, procurement, quality, shipment, bom, or general',
+    `confidence_score` Decimal(5, 2) COMMENT 'Confidence score from 0 to 1 indicating how strongly this synonym maps to the canonical term',
+    `usage_note` String COMMENT 'Explanation for AI on how to use the mapping in SQL generation or business interpretation',
+    `is_active` UInt8 COMMENT 'Flag indicating whether this synonym is currently active and should be used by the AI'
+)
+ENGINE = MergeTree
+ORDER BY (lower(synonym), term_type, target_table, target_column)
+SETTINGS index_granularity = 8192
+COMMENT 'Business synonym and vocabulary mapping table used by AI to translate user language into manufacturing warehouse schema terms';
+
+CREATE TABLE manufacturing_dw.ai_example_questions (
+    `domain` String COMMENT 'Business domain such as inventory, procurement, production, quality, or shipment',
+    `question_text` String COMMENT 'Natural-language question users may ask',
+    `primary_table` String COMMENT 'Main table expected to answer the question',
+    `related_tables` String COMMENT 'Comma-separated list of commonly joined supporting tables',
+    `expected_grouping` String COMMENT 'Typical grouping or breakdown needed for the answer',
+    `expected_filters` String COMMENT 'Typical date or business filters used in the question',
+    `notes` String COMMENT 'Extra notes for AI prompt engineering and SQL generation'
+)
+ENGINE = MergeTree
+ORDER BY (domain, primary_table)
+SETTINGS index_granularity = 8192;
+
+CREATE TABLE manufacturing_dw.ai_sql_templates (
+    `template_name` String COMMENT 'Unique name of the SQL template',
+    `template_category` String COMMENT 'Business category such as inventory, procurement, production, quality, shipment, bom, or general',
+    `business_question` String COMMENT 'Natural-language business question this template is intended to answer',
+    `intent_type` String COMMENT 'Intent type such as summary, trend, ranking, detail, root_cause, or lookup',
+    `primary_table` String COMMENT 'Main fact or bridge table used by the template',
+    `related_tables` String COMMENT 'Comma-separated list of dimension or supporting tables typically joined in the query',
+    `primary_time_column` String COMMENT 'Preferred time column to use for date filtering in this template',
+    `grain_description` String COMMENT 'Business grain expected before aggregation',
+    `required_filters` String COMMENT 'Comma-separated list of filters that should usually be applied',
+    `optional_filters` String COMMENT 'Comma-separated list of optional filters commonly used with the template',
+    `grouping_columns` String COMMENT 'Comma-separated list of typical grouping columns for the query',
+    `measure_logic` String COMMENT 'Description of the aggregation or KPI logic used in the query',
+    `sql_template` String COMMENT 'Parameterized SQL template for AI-generated queries',
+    `result_notes` String COMMENT 'Guidance on interpreting the output of the query',
+    `caveats` String COMMENT 'Warnings about grain, snapshot logic, or business interpretation',
+    `is_active` UInt8 COMMENT 'Flag indicating whether the template is active and approved for AI use'
+)
+ENGINE = MergeTree
+ORDER BY (template_category, template_name)
+SETTINGS index_granularity = 8192
+COMMENT 'Approved SQL template library for AI-generated analytics queries in the manufacturing warehouse';
+
+CREATE TABLE manufacturing_dw.bom_component (
+    `parent_product_key` UInt32 COMMENT 'Foreign key to dim_product for the parent assembly or finished good',
+    `component_product_key` UInt32 COMMENT 'Foreign key to dim_product for the child component or raw material',
+    `plant_key` UInt32 COMMENT 'Foreign key to dim_plant where this bill of material is valid',
+    `bom_version` String COMMENT 'Version identifier of the bill of material',
+    `component_quantity` Decimal(18, 4) COMMENT 'Required component quantity to produce one base quantity of the parent product',
+    `component_uom` String COMMENT 'Unit of measure of the component quantity',
+    `scrap_factor_pct` Decimal(9, 4) COMMENT 'Expected scrap percentage for the component in the manufacturing process',
+    `valid_from` Date COMMENT 'Date from which the BOM component row is valid',
+    `valid_to` Date COMMENT 'Date until which the BOM component row is valid',
+    `is_current` UInt8 COMMENT 'Flag indicating whether this BOM row is currently active'
+)
+ENGINE = MergeTree
+ORDER BY (parent_product_key, component_product_key, plant_key, bom_version, valid_from)
+SETTINGS index_granularity = 8192
+COMMENT 'Bridge table representing the bill of materials between parent products and component products';
+
+CREATE TABLE manufacturing_dw.dim_customer (
+    `customer_key` UInt32 COMMENT 'Surrogate key for the customer dimension',
+    `customer_id` String COMMENT 'Business identifier of the customer from ERP or CRM',
+    `customer_name` String COMMENT 'Customer legal or trading name',
+    `customer_segment` String COMMENT 'Business segment of the customer such as retail, industrial, or distributor',
+    `country` String COMMENT 'Customer country',
+    `region` String COMMENT 'Customer sales region',
+    `channel` String COMMENT 'Sales channel such as direct, distributor, e-commerce, or OEM',
+    `is_active` UInt8 COMMENT 'Flag indicating whether the customer is active',
+    `valid_from` Date COMMENT 'Start date when this dimension row became valid',
+    `valid_to` Date COMMENT 'End date when this dimension row stopped being valid',
+    `is_current` UInt8 COMMENT 'Flag indicating whether this is the current active version of the dimension row'
+)
+ENGINE = MergeTree
+ORDER BY customer_key
+SETTINGS index_granularity = 8192
+COMMENT 'Dimension table with customer master data for outbound shipments';
+
+CREATE TABLE manufacturing_dw.dim_date (
+    `date_key` UInt32 COMMENT 'Integer date key in YYYYMMDD format',
+    `full_date` Date COMMENT 'Calendar date',
+    `year` UInt16 COMMENT 'Calendar year number',
+    `quarter` UInt8 COMMENT 'Calendar quarter number from 1 to 4',
+    `month` UInt8 COMMENT 'Calendar month number from 1 to 12',
+    `month_name` String COMMENT 'Calendar month name',
+    `week_of_year` UInt8 COMMENT 'ISO week number within the year',
+    `day_of_month` UInt8 COMMENT 'Day number within the month',
+    `day_of_week` UInt8 COMMENT 'Day number within the week where Monday is 1 and Sunday is 7',
+    `day_name` String COMMENT 'Calendar day name',
+    `is_weekend` UInt8 COMMENT 'Flag indicating whether the date falls on a weekend'
+)
+ENGINE = MergeTree
+ORDER BY date_key
+SETTINGS index_granularity = 8192
+COMMENT 'Calendar date dimension used for reporting and time-based analysis';
+
+CREATE TABLE manufacturing_dw.dim_plant (
+    `plant_key` UInt32 COMMENT 'Surrogate key for the plant dimension',
+    `plant_id` String COMMENT 'Business identifier of the plant from the source ERP or MES system',
+    `plant_name` String COMMENT 'Human-readable name of the manufacturing plant',
+    `country` String COMMENT 'Country where the plant is located',
+    `state_region` String COMMENT 'State, province, or region of the plant',
+    `city` String COMMENT 'City where the plant is located',
+    `timezone` String COMMENT 'Local timezone used by the plant for operations and reporting',
+    `plant_type` String COMMENT 'Type of plant such as assembly, fabrication, packaging, or distribution',
+    `is_active` UInt8 COMMENT 'Flag indicating whether the plant is currently active; 1 means active, 0 means inactive',
+    `valid_from` Date COMMENT 'Start date when this dimension row became valid',
+    `valid_to` Date COMMENT 'End date when this dimension row stopped being valid; use a far-future date for current row',
+    `is_current` UInt8 COMMENT 'Flag indicating whether this is the current active version of the dimension row'
+)
+ENGINE = MergeTree
+ORDER BY plant_key
+SETTINGS index_granularity = 8192
+COMMENT 'Dimension table with descriptive information about manufacturing plants';
+
+CREATE TABLE manufacturing_dw.dim_product (
+    `product_key` UInt32 COMMENT 'Surrogate key for the product dimension',
+    `product_id` String COMMENT 'Business identifier of the product, item, or material from ERP or PLM',
+    `product_name` String COMMENT 'Human-readable name of the product or material',
+    `product_type` String COMMENT 'Type of item such as raw_material, component, subassembly, finished_good, or consumable',
+    `product_family` String COMMENT 'Higher-level grouping used for analytics and reporting',
+    `product_category` String COMMENT 'Category used by business stakeholders for planning and reporting',
+    `base_uom` String COMMENT 'Base unit of measure used for inventory and costing',
+    `standard_cost` Decimal(18, 4) COMMENT 'Standard cost per base unit',
+    `standard_price` Decimal(18, 4) COMMENT 'Standard selling price per base unit where applicable',
+    `weight_kg` Decimal(18, 4) COMMENT 'Weight of one base unit in kilograms',
+    `shelf_life_days` UInt32 COMMENT 'Expected shelf life in days; 0 when shelf life is not applicable',
+    `is_batch_tracked` UInt8 COMMENT 'Flag indicating whether the product is tracked by batch or lot',
+    `is_serial_tracked` UInt8 COMMENT 'Flag indicating whether the product is tracked by serial number',
+    `is_active` UInt8 COMMENT 'Flag indicating whether the product is active',
+    `valid_from` Date COMMENT 'Start date when this dimension row became valid',
+    `valid_to` Date COMMENT 'End date when this dimension row stopped being valid',
+    `is_current` UInt8 COMMENT 'Flag indicating whether this is the current active version of the dimension row'
+)
+ENGINE = MergeTree
+ORDER BY product_key
+SETTINGS index_granularity = 8192
+COMMENT 'Dimension table with product, material, and item master attributes';
+
+CREATE TABLE manufacturing_dw.dim_supplier (
+    `supplier_key` UInt32 COMMENT 'Surrogate key for the supplier dimension',
+    `supplier_id` String COMMENT 'Business identifier of the supplier from the procurement or ERP system',
+    `supplier_name` String COMMENT 'Supplier legal or trading name',
+    `supplier_category` String COMMENT 'Supplier category such as raw_material, packaging, tooling, or logistics',
+    `country` String COMMENT 'Country where the supplier is based',
+    `lead_time_days` UInt16 COMMENT 'Standard supplier lead time in days for delivered materials',
+    `payment_terms` String COMMENT 'Commercial payment terms agreed with the supplier',
+    `quality_rating` Decimal(5, 2) COMMENT 'Internal quality score assigned to the supplier',
+    `is_preferred` UInt8 COMMENT 'Flag indicating whether the supplier is preferred; 1 means preferred',
+    `is_active` UInt8 COMMENT 'Flag indicating whether the supplier is active; 1 means active, 0 means inactive',
+    `valid_from` Date COMMENT 'Start date when this dimension row became valid',
+    `valid_to` Date COMMENT 'End date when this dimension row stopped being valid',
+    `is_current` UInt8 COMMENT 'Flag indicating whether this is the current active version of the dimension row'
+)
+ENGINE = MergeTree
+ORDER BY supplier_key
+SETTINGS index_granularity = 8192
+COMMENT 'Dimension table with supplier master data and sourcing attributes';
+
+CREATE TABLE manufacturing_dw.dim_warehouse (
+    `warehouse_key` UInt32 COMMENT 'Surrogate key for the warehouse dimension',
+    `warehouse_id` String COMMENT 'Business identifier of the warehouse or storage location',
+    `warehouse_name` String COMMENT 'Human-readable warehouse name',
+    `plant_key` UInt32 COMMENT 'Foreign key to dim_plant indicating which plant owns or uses the warehouse',
+    `warehouse_type` String COMMENT 'Warehouse type such as raw_material, wip, finished_goods, spare_parts, or quarantine',
+    `temperature_zone` String COMMENT 'Storage temperature category such as ambient, chilled, or frozen',
+    `capacity_units` Decimal(18, 2) COMMENT 'Declared storage capacity in warehouse-defined units',
+    `capacity_uom` String COMMENT 'Unit of measure for capacity such as pallets, bins, or cubic_meters',
+    `is_active` UInt8 COMMENT 'Flag indicating whether the warehouse is active; 1 means active, 0 means inactive',
+    `valid_from` Date COMMENT 'Start date when this dimension row became valid',
+    `valid_to` Date COMMENT 'End date when this dimension row stopped being valid',
+    `is_current` UInt8 COMMENT 'Flag indicating whether this is the current active version of the dimension row'
+)
+ENGINE = MergeTree
+ORDER BY warehouse_key
+SETTINGS index_granularity = 8192
+COMMENT 'Dimension table with descriptive information about warehouses and storage areas';
+
+CREATE TABLE manufacturing_dw.dim_work_center (
+    `work_center_key` UInt32 COMMENT 'Surrogate key for the work center dimension',
+    `work_center_id` String COMMENT 'Business identifier of the work center or machine group',
+    `plant_key` UInt32 COMMENT 'Foreign key to dim_plant indicating where the work center operates',
+    `work_center_name` String COMMENT 'Human-readable name of the work center',
+    `department_name` String COMMENT 'Department or production area responsible for the work center',
+    `work_center_type` String COMMENT 'Type of work center such as machining, welding, assembly, paint, or packaging',
+    `capacity_hours_per_day` Decimal(10, 2) COMMENT 'Nominal available production hours per day',
+    `is_bottleneck` UInt8 COMMENT 'Flag indicating whether the work center is considered a production bottleneck',
+    `is_active` UInt8 COMMENT 'Flag indicating whether the work center is active',
+    `valid_from` Date COMMENT 'Start date when this dimension row became valid',
+    `valid_to` Date COMMENT 'End date when this dimension row stopped being valid',
+    `is_current` UInt8 COMMENT 'Flag indicating whether this is the current active version of the dimension row'
+)
+ENGINE = MergeTree
+ORDER BY work_center_key
+SETTINGS index_granularity = 8192
+COMMENT 'Dimension table with work center and machine group attributes';
+
+CREATE TABLE manufacturing_dw.fact_inventory_snapshot (
+    `snapshot_ts` DateTime COMMENT 'Timestamp when the inventory snapshot was taken',
+    `date_key` UInt32 COMMENT 'Foreign key to dim_date for the snapshot date',
+    `plant_key` UInt32 COMMENT 'Foreign key to dim_plant for the plant holding the stock',
+    `warehouse_key` UInt32 COMMENT 'Foreign key to dim_warehouse for the storage location',
+    `product_key` UInt32 COMMENT 'Foreign key to dim_product for the stocked item',
+    `batch_number` String COMMENT 'Batch or lot identifier when batch tracking is enabled',
+    `quantity_on_hand` Decimal(18, 4) COMMENT 'Physical quantity currently on hand',
+    `quantity_reserved` Decimal(18, 4) COMMENT 'Quantity reserved for production or customer demand',
+    `quantity_available` Decimal(18, 4) COMMENT 'Quantity available for use after reservations',
+    `inventory_uom` String COMMENT 'Unit of measure of the inventory quantities',
+    `inventory_value` Decimal(18, 4) COMMENT 'Extended inventory value for the available stock according to costing rules'
+)
+ENGINE = MergeTree
+PARTITION BY toYYYYMM(snapshot_ts)
+ORDER BY (snapshot_ts, plant_key, warehouse_key, product_key, batch_number)
+SETTINGS index_granularity = 8192
+COMMENT 'Snapshot fact table with inventory balances by time, plant, warehouse, product, and batch';
+
+CREATE TABLE manufacturing_dw.fact_material_receipt (
+    `receipt_id` String COMMENT 'Unique identifier for the material receipt transaction',
+    `receipt_ts` DateTime COMMENT 'Timestamp when the receipt was posted',
+    `date_key` UInt32 COMMENT 'Foreign key to dim_date for the receipt date',
+    `supplier_key` UInt32 COMMENT 'Foreign key to dim_supplier for the supplier that delivered the material',
+    `plant_key` UInt32 COMMENT 'Foreign key to dim_plant for the receiving plant',
+    `warehouse_key` UInt32 COMMENT 'Foreign key to dim_warehouse for the receiving storage location',
+    `product_key` UInt32 COMMENT 'Foreign key to dim_product for the received item',
+    `purchase_order_number` String COMMENT 'Purchase order number associated with the receipt',
+    `purchase_order_line` UInt32 COMMENT 'Purchase order line number associated with the receipt',
+    `batch_number` String COMMENT 'Supplier or internal batch number assigned to the received lot',
+    `quantity_received` Decimal(18, 4) COMMENT 'Quantity physically received',
+    `quantity_accepted` Decimal(18, 4) COMMENT 'Quantity accepted after inspection',
+    `quantity_rejected` Decimal(18, 4) COMMENT 'Quantity rejected during receipt or inspection',
+    `receipt_uom` String COMMENT 'Unit of measure of the receipt quantities',
+    `unit_cost` Decimal(18, 4) COMMENT 'Unit cost recorded at receipt',
+    `total_cost` Decimal(18, 4) COMMENT 'Extended total receipt cost'
+)
+ENGINE = MergeTree
+PARTITION BY toYYYYMM(receipt_ts)
+ORDER BY (receipt_ts, plant_key, warehouse_key, supplier_key, product_key, receipt_id)
+SETTINGS index_granularity = 8192
+COMMENT 'Transactional fact table with inbound supplier receipts and receiving quality outcomes';
+
+CREATE TABLE manufacturing_dw.fact_production_operation (
+    `production_order_id` String COMMENT 'Identifier of the production order this operation belongs to',
+    `operation_sequence` UInt16 COMMENT 'Sequence number of the operation within the routing',
+    `work_center_key` UInt32 COMMENT 'Foreign key to dim_work_center where the operation was executed',
+    `plant_key` UInt32 COMMENT 'Foreign key to dim_plant where the operation was executed',
+    `product_key` UInt32 COMMENT 'Foreign key to dim_product being produced during the operation',
+    `operation_name` String COMMENT 'Human-readable operation name such as cutting, welding, or assembly',
+    `operation_status` String COMMENT 'Current status of the operation such as queued, running, completed, or failed',
+    `setup_time_minutes` Decimal(12, 2) COMMENT 'Actual setup time consumed by the operation in minutes',
+    `run_time_minutes` Decimal(12, 2) COMMENT 'Actual run time consumed by the operation in minutes',
+    `downtime_minutes` Decimal(12, 2) COMMENT 'Downtime experienced during the operation in minutes',
+    `labor_hours` Decimal(12, 2) COMMENT 'Direct labor hours charged to the operation',
+    `machine_hours` Decimal(12, 2) COMMENT 'Machine hours charged to the operation',
+    `good_quantity` Decimal(18, 4) COMMENT 'Quantity produced successfully by the operation',
+    `scrap_quantity` Decimal(18, 4) COMMENT 'Quantity scrapped during the operation',
+    `event_ts` DateTime COMMENT 'Timestamp representing the most important event time for this operation record'
+)
+ENGINE = MergeTree
+PARTITION BY toYYYYMM(event_ts)
+ORDER BY (event_ts, production_order_id, operation_sequence)
+SETTINGS index_granularity = 8192
+COMMENT 'Fact table with operation-level execution metrics such as runtime, downtime, and output';
+
+CREATE TABLE manufacturing_dw.fact_production_order (
+    `production_order_id` String COMMENT 'Unique identifier of the production order or work order',
+    `order_status` String COMMENT 'Current status such as planned, released, in_progress, completed, or cancelled',
+    `plant_key` UInt32 COMMENT 'Foreign key to dim_plant where the order is produced',
+    `product_key` UInt32 COMMENT 'Foreign key to dim_product for the finished good or assembly being produced',
+    `planned_start_ts` DateTime COMMENT 'Planned start timestamp of the production order',
+    `planned_end_ts` DateTime COMMENT 'Planned completion timestamp of the production order',
+    `actual_start_ts` Nullable(DateTime) COMMENT 'Actual start timestamp when execution began',
+    `actual_end_ts` Nullable(DateTime) COMMENT 'Actual completion timestamp when execution ended',
+    `due_date_key` UInt32 COMMENT 'Foreign key to dim_date for the committed due date',
+    `order_quantity` Decimal(18, 4) COMMENT 'Planned production quantity',
+    `completed_quantity` Decimal(18, 4) COMMENT 'Quantity completed and reported as good output',
+    `scrapped_quantity` Decimal(18, 4) COMMENT 'Quantity scrapped or lost during production',
+    `order_uom` String COMMENT 'Unit of measure of order quantities',
+    `standard_cost_total` Decimal(18, 4) COMMENT 'Expected standard total cost of the production order',
+    `actual_cost_total` Decimal(18, 4) COMMENT 'Actual accumulated total cost of the production order'
+)
+ENGINE = MergeTree
+PARTITION BY toYYYYMM(planned_start_ts)
+ORDER BY (plant_key, production_order_id)
+SETTINGS index_granularity = 8192
+COMMENT 'Fact table with production order planning, execution, output, and cost metrics';
+
+CREATE TABLE manufacturing_dw.fact_quality_inspection (
+    `inspection_id` String COMMENT 'Unique identifier of the quality inspection event',
+    `inspection_ts` DateTime COMMENT 'Timestamp when the inspection occurred',
+    `date_key` UInt32 COMMENT 'Foreign key to dim_date for the inspection date',
+    `plant_key` UInt32 COMMENT 'Foreign key to dim_plant where the inspection occurred',
+    `product_key` UInt32 COMMENT 'Foreign key to dim_product being inspected',
+    `supplier_key` UInt32 COMMENT 'Foreign key to dim_supplier when the inspection is related to incoming material; use 0 or unknown when not applicable',
+    `production_order_id` String COMMENT 'Production order associated with the inspection when applicable',
+    `batch_number` String COMMENT 'Batch or lot number being inspected',
+    `inspection_type` String COMMENT 'Type of inspection such as incoming, in_process, final, or audit',
+    `defect_code` String COMMENT 'Defect code observed during inspection',
+    `defect_description` String COMMENT 'Human-readable description of the observed defect',
+    `inspected_quantity` Decimal(18, 4) COMMENT 'Total quantity inspected',
+    `accepted_quantity` Decimal(18, 4) COMMENT 'Quantity accepted after inspection',
+    `rejected_quantity` Decimal(18, 4) COMMENT 'Quantity rejected after inspection',
+    `reworked_quantity` Decimal(18, 4) COMMENT 'Quantity sent to rework after inspection',
+    `inspection_result` String COMMENT 'Overall result such as pass, fail, conditional_pass, or rework'
+)
+ENGINE = MergeTree
+PARTITION BY toYYYYMM(inspection_ts)
+ORDER BY (inspection_ts, plant_key, product_key, inspection_id)
+SETTINGS index_granularity = 8192
+COMMENT 'Fact table with incoming, in-process, and final quality inspection results';
+
+CREATE TABLE manufacturing_dw.fact_shipment (
+    `shipment_id` String COMMENT 'Unique identifier of the outbound shipment',
+    `shipment_ts` DateTime COMMENT 'Timestamp when the shipment was posted or dispatched',
+    `date_key` UInt32 COMMENT 'Foreign key to dim_date for the shipment date',
+    `customer_key` UInt32 COMMENT 'Foreign key to dim_customer receiving the goods',
+    `plant_key` UInt32 COMMENT 'Foreign key to dim_plant shipping the goods',
+    `warehouse_key` UInt32 COMMENT 'Foreign key to dim_warehouse from which the goods were shipped',
+    `product_key` UInt32 COMMENT 'Foreign key to dim_product being shipped',
+    `sales_order_number` String COMMENT 'Sales order number associated with the shipment',
+    `sales_order_line` UInt32 COMMENT 'Sales order line number associated with the shipment',
+    `batch_number` String COMMENT 'Batch or lot number shipped when applicable',
+    `shipped_quantity` Decimal(18, 4) COMMENT 'Quantity shipped to the customer',
+    `shipment_uom` String COMMENT 'Unit of measure of the shipped quantity',
+    `net_sales_amount` Decimal(18, 4) COMMENT 'Net sales amount recognized for the shipment excluding tax',
+    `freight_amount` Decimal(18, 4) COMMENT 'Freight amount charged or allocated to the shipment'
+)
+ENGINE = MergeTree
+PARTITION BY toYYYYMM(shipment_ts)
+ORDER BY (shipment_ts, customer_key, product_key, shipment_id)
+SETTINGS index_granularity = 8192
+COMMENT 'Transactional fact table with outbound customer shipments and commercial amounts';
+
+CREATE TABLE manufacturing_dw.kpi_definitions (
+    `kpi_name` String COMMENT 'Business-friendly KPI name',
+    `kpi_category` String COMMENT 'Category such as inventory, production, quality, procurement, or shipment',
+    `source_table` String COMMENT 'Primary table used to calculate the KPI',
+    `grain_note` String COMMENT 'Required grain or aggregation guidance before computing the KPI',
+    `formula_sql` String COMMENT 'SQL expression or pseudo-SQL used to calculate the KPI',
+    `numerator_definition` String COMMENT 'Business meaning of the numerator if applicable',
+    `denominator_definition` String COMMENT 'Business meaning of the denominator if applicable',
+    `unit_of_measure` String COMMENT 'Output unit such as percent, quantity, currency, hours, or ratio',
+    `preferred_time_column` String COMMENT 'Recommended time column for trend analysis',
+    `dimensions_supported` String COMMENT 'Comma-separated list of dimensions commonly used with this KPI',
+    `filters_supported` String COMMENT 'Comma-separated list of recommended filters for this KPI',
+    `interpretation` String COMMENT 'Human-readable explanation of what high or low values mean',
+    `caveats` String COMMENT 'Warnings about data quality, grain mismatch, or interpretation limits'
+)
+ENGINE = MergeTree
+ORDER BY (kpi_category, kpi_name)
+SETTINGS index_granularity = 8192;
+
+CREATE TABLE manufacturing_dw.table_ai_context (
+    `database_name` String COMMENT 'Database that owns the table',
+    `table_name` String COMMENT 'Physical table name',
+    `table_role` String COMMENT 'High-level role of the table such as dimension, fact, bridge, metadata, or view',
+    `business_grain` String COMMENT 'Lowest level of detail represented by one row in the table',
+    `business_purpose` String COMMENT 'Business reason the table exists and how it should be used',
+    `primary_time_column` String COMMENT 'Main timestamp or date column to use for time filtering; blank if not applicable',
+    `default_dimensions` String COMMENT 'Comma-separated list of common dimension columns used for grouping and filtering',
+    `default_measures` String COMMENT 'Comma-separated list of common numeric measures used for aggregations',
+    `common_filters` String COMMENT 'Comma-separated list of recommended business filters for this table',
+    `join_instructions` String COMMENT 'Human-readable guidance on how this table should be joined to related tables',
+    `data_freshness_expectation` String COMMENT 'Expected refresh cadence such as realtime, hourly, daily, or snapshot',
+    `ai_usage_notes` String COMMENT 'Extra instructions for AI tools on how to interpret or prioritize the table'
+)
+ENGINE = MergeTree
+ORDER BY (database_name, table_name)
+SETTINGS index_granularity = 8192;
+
+CREATE TABLE manufacturing_dw.table_descriptions (
+    `database_name` String COMMENT 'Database name that owns the table',
+    `table_name` String COMMENT 'Physical table name',
+    `table_description` String COMMENT 'Business description of the table and how it should be used by analytics or AI'
+)
+ENGINE = MergeTree
+ORDER BY (database_name, table_name)
+SETTINGS index_granularity = 8192
+COMMENT 'Registry table containing table-level business descriptions for the warehouse';
+
+CREATE VIEW manufacturing_dw.v_ai_business_synonyms AS
+SELECT
+    synonym,
+    canonical_term,
+    term_type,
+    target_table,
+    target_column,
+    target_value,
+    domain,
+    confidence_score,
+    usage_note,
+    is_active
+FROM manufacturing_dw.ai_business_synonyms
+WHERE is_active = 1;
+
+CREATE VIEW manufacturing_dw.v_ai_questions AS
+SELECT *
+FROM manufacturing_dw.ai_example_questions
+ORDER BY domain ASC, question_text ASC;
+
+CREATE VIEW manufacturing_dw.v_ai_semantic_catalog AS
+SELECT
+    c.database AS database_name,
+    c.table AS table_name,
+    t.comment AS native_table_comment,
+    td.table_description,
+    a.table_role,
+    a.business_grain,
+    a.business_purpose,
+    a.primary_time_column,
+    a.default_dimensions,
+    a.default_measures,
+    a.common_filters,
+    a.join_instructions,
+    a.data_freshness_expectation,
+    a.ai_usage_notes,
+    c.position AS column_position,
+    c.name AS column_name,
+    c.type AS column_type,
+    c.comment AS column_description
+FROM system.columns AS c
+LEFT JOIN system.tables AS t ON (c.database = t.database) AND (c.table = t.name)
+LEFT JOIN manufacturing_dw.table_descriptions AS td ON (c.database = td.database_name) AND (c.table = td.table_name)
+LEFT JOIN manufacturing_dw.table_ai_context AS a ON (c.database = a.database_name) AND (c.table = a.table_name)
+WHERE c.database = 'manufacturing_dw'
+ORDER BY c.table ASC, c.position ASC;
+
+CREATE VIEW manufacturing_dw.v_ai_sql_templates AS
+SELECT
+    template_name,
+    template_category,
+    business_question,
+    intent_type,
+    primary_table,
+    related_tables,
+    primary_time_column,
+    grain_description,
+    required_filters,
+    optional_filters,
+    grouping_columns,
+    measure_logic,
+    sql_template,
+    result_notes,
+    caveats,
+    is_active
+FROM manufacturing_dw.ai_sql_templates
+WHERE is_active = 1;
+
+CREATE VIEW manufacturing_dw.v_ai_sql_templates_summary AS
+SELECT
+    template_category,
+    template_name,
+    business_question,
+    intent_type,
+    primary_table,
+    primary_time_column,
+    grouping_columns,
+    measure_logic
+FROM manufacturing_dw.ai_sql_templates
+WHERE is_active = 1
+ORDER BY template_category ASC, template_name ASC;
+
+CREATE VIEW manufacturing_dw.v_ai_synonyms_by_column AS
+SELECT
+    target_table,
+    target_column,
+    groupArray(synonym) AS synonyms,
+    groupArray(canonical_term) AS canonical_terms
+FROM manufacturing_dw.ai_business_synonyms
+WHERE (is_active = 1) AND (target_table != '') AND (target_column != '')
+GROUP BY target_table, target_column;
+
+CREATE VIEW manufacturing_dw.v_ai_synonyms_by_table AS
+SELECT
+    target_table,
+    groupArray(synonym) AS synonyms,
+    groupArray(canonical_term) AS canonical_terms
+FROM manufacturing_dw.ai_business_synonyms
+WHERE (is_active = 1) AND (target_table != '')
+GROUP BY target_table;
+
+CREATE VIEW manufacturing_dw.v_ai_vocabulary_catalog AS
+SELECT
+    s.synonym,
+    s.canonical_term,
+    s.term_type,
+    s.domain,
+    s.target_table,
+    s.target_column,
+    s.target_value,
+    s.confidence_score,
+    s.usage_note,
+    tc.table_role,
+    tc.business_grain,
+    tc.business_purpose,
+    tc.primary_time_column
+FROM manufacturing_dw.ai_business_synonyms AS s
+LEFT JOIN manufacturing_dw.table_ai_context AS tc ON (s.target_table = tc.table_name) AND (tc.database_name = 'manufacturing_dw')
+WHERE s.is_active = 1;
+
+CREATE VIEW manufacturing_dw.v_data_dictionary AS
+SELECT
+    c.database AS database_name,
+    c.table AS table_name,
+    td.table_description,
+    c.position AS column_position,
+    c.name AS column_name,
+    c.type AS column_type,
+    c.comment AS column_description
+FROM system.columns AS c
+LEFT JOIN manufacturing_dw.table_descriptions AS td ON (c.database = td.database_name) AND (c.table = td.table_name)
+WHERE c.database = 'manufacturing_dw'
+ORDER BY table_name ASC, column_position ASC;
+
+CREATE VIEW manufacturing_dw.v_kpi_catalog AS
+SELECT *
+FROM manufacturing_dw.kpi_definitions
+ORDER BY kpi_category ASC, kpi_name ASC;
+
+CREATE VIEW manufacturing_dw.v_table_catalog AS
+SELECT
+    t.database AS database_name,
+    t.name AS table_name,
+    t.engine,
+    t.comment AS native_table_comment,
+    td.table_description,
+    a.table_role,
+    a.business_grain,
+    a.business_purpose,
+    a.primary_time_column,
+    a.default_dimensions,
+    a.default_measures,
+    a.common_filters,
+    a.join_instructions,
+    a.data_freshness_expectation,
+    a.ai_usage_notes
+FROM system.tables AS t
+LEFT JOIN manufacturing_dw.table_descriptions AS td ON (t.database = td.database_name) AND (t.name = td.table_name)
+LEFT JOIN manufacturing_dw.table_ai_context AS a ON (t.database = a.database_name) AND (t.name = a.table_name)
+WHERE t.database = 'manufacturing_dw'
+ORDER BY t.name ASC;
