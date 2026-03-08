@@ -1,6 +1,5 @@
 import os
 from pydantic import BaseSettings
-from typing import Optional
 
 class Settings(BaseSettings):
     # API

@@ -1,6 +1,6 @@
 import chromadb
 from chromadb.utils import embedding_functions
-from typing import List, Dict, Any
+from typing import List, Dict
 
 class SchemaVectorStore:
     def __init__(self, index_path: str):

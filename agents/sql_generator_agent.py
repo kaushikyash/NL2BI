@@ -2,7 +2,6 @@ from prompts.sql_prompts import TEXT2SQL_PROMPT, ERROR_CORRECTION_PROMPT
 from typing import Dict, Any
 import openai
 from config.settings import settings
-import json
 import re
 
 class SQLGeneratorAgent:

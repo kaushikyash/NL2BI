@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from core.rag_pipeline import Text2SQLPipeline
 from config.settings import settings
 import uvicorn
-from typing import Dict, Any
+from typing import Dict
 
 app = FastAPI(title="Text2SQL RAG API", version="1.0.0")
 
