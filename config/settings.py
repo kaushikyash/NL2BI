@@ -7,8 +7,8 @@ class Settings(BaseSettings):
     API_PORT = 8000
     
     # LLM
-    LLM_MODEL = "gpt-4o-mini"  # or "llama3.1" for local
-    LLM_API_KEY = os.getenv("OPENAI_API_KEY")
+    LLM_MODEL = "gemini-2.5-flash"  # or "llama3.1" for local
+    LLM_API_KEY = os.getenv("GOOGLE_API_KEY")
     LLM_BASE_URL = os.getenv("LLM_BASE_URL", "")
     
     # Vector DB

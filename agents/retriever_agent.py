@@ -12,7 +12,7 @@ class RetrieverAgent:
         
         self.client = chromadb.PersistentClient(path=self.index_path)
         self.embedding_fn = embedding_functions.SentenceTransformerEmbeddingFunction(
-            model_name="all-MiniLM-L6-v2"
+            model_name="gemini-embedding-001"
         )
         self.collection = self.client.get_or_create_collection(
             name="db_schema",

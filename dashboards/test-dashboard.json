@@ -1,0 +1,38 @@
+{
+  "dashboard": {
+    "title": "TEST DASHBOARD",
+    "panels": [
+      {
+        "collapsed": false,
+        "gridPos": {
+          "h": 1,
+          "w": 24,
+          "x": 0,
+          "y": 0
+        },
+        "id": 1,
+        "targets": [
+          {
+            "expr": "1",
+            "refId": "A"
+          }
+        ],
+        "title": "Static Value = 1",
+        "type": "stat"
+      }
+    ],
+    "refresh": "5s",
+    "schemaVersion": 30,
+    "tags": [],
+    "time": {
+      "from": "now-6h",
+      "to": "now"
+    },
+    "timepicker": {},
+    "timezone": "",
+    "uid": "test-provision",
+    "version": 1
+  },
+  "folder": 0,
+  "overwrite": true
+}
