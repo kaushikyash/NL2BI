@@ -1,34 +1,52 @@
-from agents.retriever_agent import RetrieverAgent
-from agents.sql_generator_agent import SQLGeneratorAgent
-from utils.schema_embeddings import extract_schema_metadata
-from typing import Dict, Any
-import json
+from pprint import pformat
+from typing import Dict
 
-class Text2SQLPipeline:
-    def __init__(self, db_path: str = ":memory:"):
-        self.retriever = RetrieverAgent()
-        self.sql_generator = SQLGeneratorAgent()
-        self.db_path = db_path
-    #     self.full_schema = self._load_full_schema()
-    
-    # def _load_full_schema(self) -> str:
-    #     """Load complete database schema"""
-    #     metadata = extract_schema_metadata(self.db_path)
-    #     return "\n".join([json.dumps(m, indent=2) for m in metadata])
-    
-    async def generate_sql(self, question: str) -> Dict[str, Any]:
-        """Complete RAG pipeline: retrieve -> generate SQL"""
-        
-        # Step 1: Retrieve relevant schema
-        retrieval_result = self.retriever.retrieve_relevant_tables(question)
-    
-        print(f"Retrieved {retrieval_result['table_count']}/{retrieval_result['top_k_searched']} tables")
-        print("Context preview:", retrieval_result['context'][:200])
-        
-        # Step 2: Generate SQL
-        generation_result = await self.sql_generator.generate_sql(
-            question=question,
-            context=retrieval_result["context"]
+from agents.retriever_agent import SchemaRetriever
+from agents.sql_generator_agent import SQLGeneratorAgent
+from core.executor import SQLExecutor
+
+
+class NL2SQLPipeline:
+    def __init__(self):
+        self.retriever = SchemaRetriever()
+        self.sql_gen = SQLGeneratorAgent()
+        self.executor = SQLExecutor()
+
+    def process_query(self, question: str) -> Dict:
+        """Full pipeline: NL -> SQL -> Execute -> JSON."""
+        print(f"[pipeline] question: {question}")
+
+        context = self.retriever.retrieve_context(question)
+        print(
+            f"[pipeline] retrieved hits={context.get('hits', 0)} "
+            f"unique_tables={context.get('unique_tables', 0)}"
         )
-        
-        return generation_result["sql"]
+        if context.get("table_context"):
+            print("[pipeline] table context:")
+            print(context["table_context"])
+
+        sql_result = self.sql_gen.generate_sql(question, context)
+        print("[pipeline] generated SQL:")
+        print(sql_result["sql"])
+
+        result = self.executor.execute(sql_result["sql"])
+        print(f"[pipeline] execution rows={result.rows} columns={result.columns}")
+        if result.data:
+            print("[pipeline] first row:")
+            print(pformat(result.data[0]))
+
+        if result.is_single_row and not result.data[0].get("error"):
+            return {
+                "type": "text",
+                "message": str(result.data[0]),
+                "sql": sql_result["sql"],
+                "rows": result.rows,
+            }
+
+        return {
+            "type": "table",
+            "columns": result.columns,
+            "data": result.data,
+            "sql": sql_result["sql"],
+            "rows": result.rows,
+        }

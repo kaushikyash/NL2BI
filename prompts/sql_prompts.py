@@ -1,4 +1,4 @@
-TEXT2SQL_PROMPT = """You are an expert SQL assistant. Generate precise SQL queries based on the database schema and user question.
+TEXT2SQL_PROMPT = """You are an expert ClickHouse SQL assistant. Generate precise SQL queries based on the database schema and user question.
 
 RELEVANT TABLES (from vector search):
 {context}
@@ -19,7 +19,12 @@ SQL: SELECT p.name, SUM(oi.quantity * oi.unit_price) as revenue FROM order_items
 
 USER QUESTION: {question}
 
-Generate ONLY the SQL query. Use proper table aliases. Consider date formats and constraints from schema."""
+Rules:
+- Return ONLY SQL.
+- Use fully qualified table names when the schema context includes a database, e.g. `database.table`.
+- Prefer the exact table names and columns shown in the schema context.
+- If the question asks for names and only IDs are available in one table, join to the relevant dimension table when it appears in the schema context.
+- Consider ClickHouse syntax, date formats, and constraints from schema."""
 
 ERROR_CORRECTION_PROMPT = """The following SQL query failed:
 
