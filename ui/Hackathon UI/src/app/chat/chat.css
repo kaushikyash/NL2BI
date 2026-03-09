@@ -1,7 +1,7 @@
 .chat-card {
-  max-width: 90%;
+  max-width: 98%;
   margin: 20px auto;
-  height: 90%;
+  height: calc(100vh - 40px); /* Use viewport height minus margins */
   display: flex;
   flex-direction: column;
 }
@@ -17,12 +17,14 @@
   width: 120px;
 }
 
-.chat-content {
+.chat-content { 
   background-image: url('/assets/images/database.jpg');
   background-size: cover;
   background-position: center;
   flex: 1;
   padding: 16px;
+  display: flex;
+  flex-direction: column;
 }
 
 .message-list {
@@ -30,17 +32,25 @@
   background: rgba(255, 255, 255, 0.8); /* Semi-transparent background for readability */
   border-radius: 8px;
   padding: 8px;
+  display: flex;
+  flex-direction: column;
 }
 
 .message-container {
-  height: 500px;
+  flex: 1;
   overflow-y: auto;
+  min-height: 400px; /* Minimum height */
+  max-height: calc(100vh - 270px); /* Maximum height to prevent overflow */
 }
 
 .message-item {
   display: flex;
-  align-items: center;
-  margin-bottom: 8px;
+  align-items: flex-start; /* Changed from center to flex-start for better text alignment */
+  margin-bottom: 12px; /* Increased margin */
+  word-wrap: break-word; /* Ensure long words break */
+  padding: 8px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .avatar {
@@ -48,6 +58,66 @@
   height: 40px;
   border-radius: 50%;
   margin-right: 12px;
+  flex-shrink: 0; /* Prevent avatar from shrinking */
+}
+
+.message-content {
+  flex: 1;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+
+.message-content p {
+  margin: 4px 0;
+  line-height: 1.4;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.message-content a {
+  color: #1976d2;
+  text-decoration: none;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  display: block;
+  margin: 4px 0;
+  padding: 4px 8px;
+  background: rgba(25, 118, 210, 0.1);
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.message-content a:hover {
+  text-decoration: underline;
+  background: rgba(25, 118, 210, 0.2);
+}
+
+.message-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  margin-top: 8px;
+}
+
+.message-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 8px;
+  font-size: 0.9em;
+}
+
+.message-table th, .message-table td {
+  border: 1px solid #ddd;
+  padding: 6px 8px;
+  text-align: left;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.message-table th {
+  background-color: #f2f2f2;
+  font-weight: 600;
 }
 
 .message-input {

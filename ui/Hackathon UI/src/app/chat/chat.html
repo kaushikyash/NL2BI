@@ -18,20 +18,46 @@
       <p class="message-list">Welcome to the Chat & Query interface! Start by typing your query below.</p>
     </ng-container>
     <ng-container *ngIf="messages().length > 0">
-      <mat-list class="message-list">
+      <div class="message-list">
         <div #messageContainer class="message-container">
-      @for (msg of messages(); track $index) {
-        <mat-list-item class="message-item">
-          @if (msg.startsWith('Bot:')) {
-            <img src="/assets/images/chatbot.jpg" alt="Bot Avatar" class="avatar">
+      @for (msg of messages(); track msg.id) {
+        <div class="message-item">
+          @if (msg.sender === 'assistant') {
+            <img src="../../assets/images/chatbot.jpg"  class="avatar">
           } @else {
-            <img src="/assets/images/user.jpg" alt="User Avatar" class="avatar">
+            <img src="../../assets/images/user.jpg" class="avatar">
           }
-          <span>{{ msg }}</span>
-        </mat-list-item>
+          <div class="message-content">
+            @if (msg.type === 'text') {
+              <p>{{ msg.content.text }}</p>
+            } @else if (msg.type === 'link') {
+              <p>{{ msg.content.text }}</p>
+              @for (link of msg.content.links; track link.url) {
+                <a [href]="link.url" target="_blank">{{ link.urlLabel }}</a>
+              }
+            } @else if (msg.type === 'image') {
+              <p>{{ msg.content.text }}</p>
+              <img [src]="msg.content.image.url" [alt]="msg.content.image.alt" [width]="msg.content.image.width" [height]="msg.content.image.height">
+            } @else if (msg.type === 'table') {
+              <p>{{ msg.content.text }}</p>
+              <table class="message-table">
+                <thead>
+                  <tr>
+                    <th *ngFor="let header of msg.content.table.headers">{{ header }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let row of msg.content.table.rows">
+                    <td *ngFor="let cell of row">{{ cell }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            }
+          </div>
+        </div>
       }
         </div>
-    </mat-list>
+      </div>
     </ng-container>
     
   </mat-card-content>
