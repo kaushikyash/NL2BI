@@ -1,0 +1,63 @@
+[
+  {
+    "id": "msg_text_001",
+    "type": "text",
+    "sender": "assistant",
+    "timestamp": "2026-03-07T20:19:00Z",
+    "content": {
+      "text": "Here's a simple text response with some developer context about your AI project."
+    }
+  },
+  {
+    "id": "msg_link_003",
+    "type": "link",
+    "sender": "assistant",
+    "timestamp": "2026-03-07T20:21:00Z",
+    "content": {
+      "text": "Full BI dashboard available here for deeper analysis:",
+      "links": [
+        {
+          "url": "https://bi-demo.looker.com/dashboards/1",
+          "urlLabel": "View Sales Dashboard"
+        },
+        {
+          "url": "https://bi-demo.looker.com/dashboards/2",
+          "urlLabel": "View User Analytics"
+        }
+      ]
+    }
+  },
+  {
+    "id": "msg_image_002",
+    "type": "image",
+    "sender": "assistant",
+    "timestamp": "2026-03-07T20:20:00Z",
+    "content": {
+      "text": "Here's a generated dashboard mockup for your AI analytics project:",
+      "image": {
+        "url": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800&h=450&fit=crop",
+        "alt": "AI Analytics Dashboard Mockup",
+        "width": 800,
+        "height": 450
+      }
+    }
+  },
+  {
+    "id": "msg_table_004",
+    "type": "table",
+    "sender": "assistant",
+    "timestamp": "2026-03-07T20:22:00Z",
+    "content": {
+      "text": "API performance metrics from your last deployment:",
+      "table": {
+        "headers": ["Endpoint", "Avg Response (ms)", "Error Rate", "Throughput"],
+        "rows": [
+          ["POST /api/chat", "127", "0.2%", "45 req/s"],
+          ["GET /api/models", "89", "0.1%", "112 req/s"],
+          ["POST /api/generate", "342", "1.1%", "23 req/s"],
+          ["GET /api/status", "45", "0.0%", "89 req/s"]
+        ]
+      }
+    }
+  }
+]

@@ -1,0 +1,78 @@
+<mat-card class="chat-card">
+  <mat-card-header>
+    <mat-card-title>Chat & Query</mat-card-title>
+    <div class="header-actions">
+        <mat-form-field appearance="outline" class="db-select">
+          <mat-label>DB Type</mat-label>
+          <mat-select [(ngModel)]="selectedDbType" (selectionChange)="onDbTypeChange()">
+            <mat-option value="ClickHouse">ClickHouse</mat-option>
+            <mat-option value="SQL">SQL</mat-option>
+            <mat-option value="Oracle">Oracle</mat-option>
+            <mat-option value="Postgres">Postgres</mat-option>
+          </mat-select>
+        </mat-form-field>
+      <button mat-button (click)="logout()">Logout</button>
+    </div>
+  </mat-card-header>
+  <mat-card-content #chatContent class="chat-content">
+    <ng-container *ngIf="messages().length === 0">
+      <p class="message-list">Welcome to the Chat & Query interface! Start by typing your query below.</p>
+    </ng-container>
+    <ng-container *ngIf="messages().length > 0">
+      <div class="message-list">
+        <div #messageContainer class="message-container">
+      @for (msg of messages(); track msg.id) {
+        <div class="message-item">
+          @if (msg.sender === 'assistant') {
+            <img src="../../assets/images/chatbot.jpg"  class="avatar">
+          } @else {
+            <img src="../../assets/images/user.jpg" class="avatar">
+          }
+          <div class="message-content">
+            @if (msg.type === 'text') {
+              <p>{{ msg.content.text }}</p>
+            } @else if (msg.type === 'link') {
+              <p>{{ msg.content.text }}</p>
+              @for (link of msg.content.links; track link.url) {
+                <a [href]="link.url" target="_blank">{{ link.urlLabel }}</a>
+              }
+            } @else if (msg.type === 'image') {
+              <p>{{ msg.content.text }}</p>
+              <img [src]="msg.content.image.url" [alt]="msg.content.image.alt" [width]="msg.content.image.width" [height]="msg.content.image.height">
+            } @else if (msg.type === 'table') {
+              <p>{{ msg.content.text }}</p>
+              <table class="message-table">
+                <thead>
+                  <tr>
+                    <th *ngFor="let header of msg.content.table.headers">{{ header }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let row of msg.content.table.rows">
+                    <td *ngFor="let cell of row">{{ cell }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            }
+          </div>
+        </div>
+      }
+        </div>
+      </div>
+    </ng-container>
+    <ng-container *ngIf="isLoading">
+      <p class="message-list">Running query...</p>
+    </ng-container>
+     
+  </mat-card-content>
+  <mat-card-actions>
+    <mat-form-field appearance="outline" class="message-input">
+      <mat-label>Type your query</mat-label>
+      <input matInput [(ngModel)]="newMessage" (keyup.enter)="addMessage()">
+    </mat-form-field>
+    <mat-slide-toggle [(ngModel)]="createDashboard" [disabled]="isLoading">
+      Dashboard
+    </mat-slide-toggle>
+    <button mat-raised-button color="primary" (click)="addMessage()" [disabled]="isLoading">Send</button>
+  </mat-card-actions>
+</mat-card>

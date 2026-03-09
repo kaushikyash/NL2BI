@@ -1,0 +1,32 @@
+<mat-card class="dashboard-card">
+  <mat-card-header>
+    <mat-card-title>Dashboard</mat-card-title>
+    <div class="header-actions">
+      <button mat-button (click)="logout()">Logout</button>
+      <button mat-button (click)="goToChat()">Back to Chat</button>
+    </div>
+  </mat-card-header>
+  <mat-card-content>
+    <div class="dashboard-content">
+      <mat-card class="info-card">
+        <mat-card-header>
+          <mat-card-title>Database Connection</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <p><strong>Database Type:</strong> {{ dbType }}</p>
+          <p><strong>Status:</strong> Connected</p>
+        </mat-card-content>
+      </mat-card>
+
+      <mat-card class="info-card">
+        <mat-card-header>
+          <mat-card-title>Recent Activity</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <p>Welcome to your Hackathon UI Dashboard!</p>
+          <p>Use the chat interface to interact with your database.</p>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </mat-card-content>
+</mat-card>
