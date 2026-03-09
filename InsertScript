@@ -1,0 +1,213 @@
+USE manufacturing_dw;
+
+-- =========================================================
+-- DIMENSIONS
+-- =========================================================
+
+INSERT INTO dim_plant
+(
+    plant_key, plant_id, plant_name, country, state_region, city, timezone,
+    plant_type, is_active, valid_from, valid_to, is_current
+)
+VALUES
+(1, 'PLANT_IND_01', 'Indore Assembly Plant', 'India', 'Madhya Pradesh', 'Indore', 'Asia/Kolkata', 'assembly', 1, '2024-01-01', '2099-12-31', 1),
+(2, 'PLANT_PUN_01', 'Pune Fabrication Plant', 'India', 'Maharashtra', 'Pune', 'Asia/Kolkata', 'fabrication', 1, '2024-01-01', '2099-12-31', 1);
+
+INSERT INTO dim_warehouse
+(
+    warehouse_key, warehouse_id, warehouse_name, plant_key, warehouse_type,
+    temperature_zone, capacity_units, capacity_uom, is_active,
+    valid_from, valid_to, is_current
+)
+VALUES
+(1, 'WH_IND_RM', 'Indore Raw Material Warehouse', 1, 'raw_material', 'ambient', 5000.00, 'pallets', 1, '2024-01-01', '2099-12-31', 1),
+(2, 'WH_IND_WIP', 'Indore WIP Warehouse', 1, 'wip', 'ambient', 2500.00, 'pallets', 1, '2024-01-01', '2099-12-31', 1),
+(3, 'WH_IND_FG', 'Indore Finished Goods Warehouse', 1, 'finished_goods', 'ambient', 4000.00, 'pallets', 1, '2024-01-01', '2099-12-31', 1),
+(4, 'WH_PUN_RM', 'Pune Raw Material Warehouse', 2, 'raw_material', 'ambient', 6000.00, 'pallets', 1, '2024-01-01', '2099-12-31', 1),
+(5, 'WH_PUN_FG', 'Pune Finished Goods Warehouse', 2, 'finished_goods', 'ambient', 3500.00, 'pallets', 1, '2024-01-01', '2099-12-31', 1);
+
+INSERT INTO dim_supplier
+(
+    supplier_key, supplier_id, supplier_name, supplier_category, country,
+    lead_time_days, payment_terms, quality_rating, is_preferred, is_active,
+    valid_from, valid_to, is_current
+)
+VALUES
+(1, 'SUP_STEEL_01', 'Prime Steel Ltd', 'raw_material', 'India', 10, 'NET30', 92.50, 1, 1, '2024-01-01', '2099-12-31', 1),
+(2, 'SUP_MOTOR_01', 'Motion Components Pvt Ltd', 'component', 'India', 14, 'NET45', 88.00, 1, 1, '2024-01-01', '2099-12-31', 1),
+(3, 'SUP_PACK_01', 'SecurePack Industries', 'packaging', 'India', 7, 'NET30', 95.00, 1, 1, '2024-01-01', '2099-12-31', 1);
+
+INSERT INTO dim_product
+(
+    product_key, product_id, product_name, product_type, product_family,
+    product_category, base_uom, standard_cost, standard_price, weight_kg,
+    shelf_life_days, is_batch_tracked, is_serial_tracked, is_active,
+    valid_from, valid_to, is_current
+)
+VALUES
+(1, 'RM_STEEL_SHEET', 'Steel Sheet 2mm', 'raw_material', 'Metal', 'Steel', 'KG', 58.0000, 0.0000, 1.0000, 0, 1, 0, 1, '2024-01-01', '2099-12-31', 1),
+(2, 'RM_PACK_BOX', 'Corrugated Box Large', 'raw_material', 'Packaging', 'Box', 'EA', 22.0000, 0.0000, 0.2500, 0, 0, 0, 1, '2024-01-01', '2099-12-31', 1),
+(3, 'COMP_MOTOR_A', 'Motor Assembly A', 'component', 'Electrical', 'Motor', 'EA', 750.0000, 0.0000, 4.5000, 0, 1, 1, 1, '2024-01-01', '2099-12-31', 1),
+(4, 'SUB_FRAME_A', 'Frame Assembly A', 'subassembly', 'Mechanical', 'Frame', 'EA', 320.0000, 0.0000, 7.0000, 0, 1, 0, 1, '2024-01-01', '2099-12-31', 1),
+(5, 'FG_PUMP_X1', 'Pump Model X1', 'finished_good', 'Pumps', 'Industrial Pump', 'EA', 1850.0000, 2600.0000, 14.0000, 0, 1, 1, 1, '2024-01-01', '2099-12-31', 1),
+(6, 'FG_PUMP_X2', 'Pump Model X2', 'finished_good', 'Pumps', 'Industrial Pump', 'EA', 2100.0000, 2950.0000, 15.5000, 0, 1, 1, 1, '2024-01-01', '2099-12-31', 1);
+
+INSERT INTO dim_work_center
+(
+    work_center_key, work_center_id, plant_key, work_center_name, department_name,
+    work_center_type, capacity_hours_per_day, is_bottleneck, is_active,
+    valid_from, valid_to, is_current
+)
+VALUES
+(1, 'WC_CUT_01', 2, 'Cutting Line 1', 'Fabrication', 'machining', 16.00, 0, 1, '2024-01-01', '2099-12-31', 1),
+(2, 'WC_WELD_01', 2, 'Welding Cell 1', 'Fabrication', 'welding', 16.00, 1, 1, '2024-01-01', '2099-12-31', 1),
+(3, 'WC_ASSY_01', 1, 'Assembly Line 1', 'Assembly', 'assembly', 18.00, 1, 1, '2024-01-01', '2099-12-31', 1),
+(4, 'WC_PACK_01', 1, 'Packaging Line 1', 'Packaging', 'packaging', 12.00, 0, 1, '2024-01-01', '2099-12-31', 1);
+
+INSERT INTO dim_customer
+(
+    customer_key, customer_id, customer_name, customer_segment, country,
+    region, channel, is_active, valid_from, valid_to, is_current
+)
+VALUES
+(1, 'CUST_001', 'Apex Industrial Buyers', 'industrial', 'India', 'North', 'direct', 1, '2024-01-01', '2099-12-31', 1),
+(2, 'CUST_002', 'Velocity Distributors', 'distributor', 'India', 'West', 'distributor', 1, '2024-01-01', '2099-12-31', 1),
+(3, 'CUST_003', 'Metro Retail Equipments', 'retail', 'India', 'South', 'direct', 1, '2024-01-01', '2099-12-31', 1);
+
+INSERT INTO dim_date
+(
+    date_key, full_date, year, quarter, month, month_name, week_of_year,
+    day_of_month, day_of_week, day_name, is_weekend
+)
+VALUES
+(20260301, '2026-03-01', 2026, 1, 3, 'March', 9, 1, 7, 'Sunday', 1),
+(20260302, '2026-03-02', 2026, 1, 3, 'March', 10, 2, 1, 'Monday', 0),
+(20260303, '2026-03-03', 2026, 1, 3, 'March', 10, 3, 2, 'Tuesday', 0),
+(20260304, '2026-03-04', 2026, 1, 3, 'March', 10, 4, 3, 'Wednesday', 0),
+(20260305, '2026-03-05', 2026, 1, 3, 'March', 10, 5, 4, 'Thursday', 0),
+(20260306, '2026-03-06', 2026, 1, 3, 'March', 10, 6, 5, 'Friday', 0),
+(20260307, '2026-03-07', 2026, 1, 3, 'March', 10, 7, 6, 'Saturday', 1),
+(20260308, '2026-03-08', 2026, 1, 3, 'March', 10, 8, 7, 'Sunday', 1),
+(20260309, '2026-03-09', 2026, 1, 3, 'March', 11, 9, 1, 'Monday', 0),
+(20260310, '2026-03-10', 2026, 1, 3, 'March', 11, 10, 2, 'Tuesday', 0);
+
+-- =========================================================
+-- BOM
+-- =========================================================
+
+INSERT INTO bom_component
+(
+    parent_product_key, component_product_key, plant_key, bom_version,
+    component_quantity, component_uom, scrap_factor_pct,
+    valid_from, valid_to, is_current
+)
+VALUES
+(5, 1, 1, 'V1', 8.5000, 'KG', 2.5000, '2025-01-01', '2099-12-31', 1),
+(5, 3, 1, 'V1', 1.0000, 'EA', 0.0000, '2025-01-01', '2099-12-31', 1),
+(5, 2, 1, 'V1', 1.0000, 'EA', 0.0000, '2025-01-01', '2099-12-31', 1),
+(6, 1, 1, 'V1', 10.0000, 'KG', 3.0000, '2025-01-01', '2099-12-31', 1),
+(6, 3, 1, 'V1', 1.0000, 'EA', 0.0000, '2025-01-01', '2099-12-31', 1),
+(6, 2, 1, 'V1', 1.0000, 'EA', 0.0000, '2025-01-01', '2099-12-31', 1);
+
+-- =========================================================
+-- INVENTORY SNAPSHOT
+-- =========================================================
+
+INSERT INTO fact_inventory_snapshot
+(
+    snapshot_ts, date_key, plant_key, warehouse_key, product_key, batch_number,
+    quantity_on_hand, quantity_reserved, quantity_available, inventory_uom, inventory_value
+)
+VALUES
+('2026-03-08 08:00:00', 20260308, 1, 1, 1, 'BATCH_ST_001', 4200.0000, 500.0000, 3700.0000, 'KG', 214600.0000),
+('2026-03-08 08:00:00', 1, 1, 1, 2, 'BATCH_BX_001', 900.0000, 80.0000, 820.0000, 'EA', 18040.0000),
+('2026-03-08 08:00:00', 1, 1, 3, 5, 'FGX1_0803', 120.0000, 20.0000, 100.0000, 'EA', 222000.0000),
+('2026-03-08 08:00:00', 1, 1, 3, 6, 'FGX2_0803', 75.0000, 10.0000, 65.0000, 'EA', 136500.0000),
+('2026-03-08 08:00:00', 2, 4, 1, 1, 'BATCH_ST_002', 5100.0000, 600.0000, 4500.0000, 'KG', 295800.0000),
+('2026-03-08 08:00:00', 2, 4, 3, 3, 'MOTOR_0803', 200.0000, 30.0000, 170.0000, 'EA', 127500.0000);
+
+-- =========================================================
+-- MATERIAL RECEIPTS
+-- =========================================================
+
+INSERT INTO fact_material_receipt
+(
+    receipt_id, receipt_ts, date_key, supplier_key, plant_key, warehouse_key,
+    product_key, purchase_order_number, purchase_order_line, batch_number,
+    quantity_received, quantity_accepted, quantity_rejected, receipt_uom,
+    unit_cost, total_cost
+)
+VALUES
+('RCPT_1001', '2026-03-02 09:15:00', 20260302, 1, 2, 4, 1, 'PO_5001', 1, 'ST_20260302_A', 2500.0000, 2450.0000, 50.0000, 'KG', 57.5000, 143750.0000),
+('RCPT_1002', '2026-03-03 11:30:00', 20260303, 2, 1, 1, 3, 'PO_5002', 1, 'MO_20260303_A', 120.0000, 115.0000, 5.0000, 'EA', 745.0000, 89400.0000),
+('RCPT_1003', '2026-03-04 14:00:00', 20260304, 3, 1, 1, 2, 'PO_5003', 1, 'BX_20260304_A', 600.0000, 600.0000, 0.0000, 'EA', 21.5000, 12900.0000),
+('RCPT_1004', '2026-03-06 10:20:00', 20260306, 1, 1, 1, 1, 'PO_5004', 1, 'ST_20260306_A', 1800.0000, 1760.0000, 40.0000, 'KG', 58.0000, 104400.0000);
+
+-- =========================================================
+-- PRODUCTION ORDERS
+-- =========================================================
+
+INSERT INTO fact_production_order
+(
+    production_order_id, order_status, plant_key, product_key, planned_start_ts,
+    planned_end_ts, actual_start_ts, actual_end_ts, due_date_key, order_quantity,
+    completed_quantity, scrapped_quantity, order_uom, standard_cost_total, actual_cost_total
+)
+VALUES
+('PO_7001', 'completed', 1, 5, '2026-03-03 08:00:00', '2026-03-04 18:00:00', '2026-03-03 08:10:00', '2026-03-04 17:20:00', 20260305, 60.0000, 58.0000, 2.0000, 'EA', 111000.0000, 113200.0000),
+('PO_7002', 'in_progress', 1, 6, '2026-03-06 08:00:00', '2026-03-08 18:00:00', '2026-03-06 08:05:00', NULL, 20260309, 50.0000, 32.0000, 3.0000, 'EA', 105000.0000, 74250.0000),
+('PO_7003', 'completed', 1, 5, '2026-03-07 09:00:00', '2026-03-08 19:00:00', '2026-03-07 09:15:00', '2026-03-08 18:45:00', 20260310, 40.0000, 39.0000, 1.0000, 'EA', 74000.0000, 74800.0000);
+
+-- =========================================================
+-- PRODUCTION OPERATIONS
+-- =========================================================
+
+INSERT INTO fact_production_operation
+(
+    production_order_id, operation_sequence, work_center_key, plant_key, product_key,
+    operation_name, operation_status, setup_time_minutes, run_time_minutes,
+    downtime_minutes, labor_hours, machine_hours, good_quantity, scrap_quantity, event_ts
+)
+VALUES
+('PO_7001', 10, 1, 2, 5, 'Cutting', 'completed', 35.00, 220.00, 12.00, 6.50, 4.00, 60.0000, 0.0000, '2026-03-03 13:00:00'),
+('PO_7001', 20, 2, 2, 5, 'Welding', 'completed', 25.00, 190.00, 18.00, 5.00, 3.50, 59.0000, 1.0000, '2026-03-03 17:30:00'),
+('PO_7001', 30, 3, 1, 5, 'Assembly', 'completed', 30.00, 260.00, 22.00, 8.00, 4.80, 58.0000, 1.0000, '2026-03-04 15:30:00'),
+('PO_7001', 40, 4, 1, 5, 'Packaging', 'completed', 15.00, 80.00, 5.00, 2.00, 1.50, 58.0000, 0.0000, '2026-03-04 17:00:00'),
+('PO_7002', 10, 1, 2, 6, 'Cutting', 'completed', 40.00, 200.00, 10.00, 5.50, 3.80, 35.0000, 0.0000, '2026-03-06 14:00:00'),
+('PO_7002', 20, 2, 2, 6, 'Welding', 'completed', 28.00, 170.00, 25.00, 4.80, 3.20, 34.0000, 1.0000, '2026-03-07 11:15:00'),
+('PO_7002', 30, 3, 1, 6, 'Assembly', 'running', 20.00, 140.00, 30.00, 4.50, 2.90, 32.0000, 2.0000, '2026-03-08 16:10:00'),
+('PO_7003', 10, 1, 2, 5, 'Cutting', 'completed', 20.00, 150.00, 8.00, 4.20, 2.80, 40.0000, 0.0000, '2026-03-07 13:00:00'),
+('PO_7003', 20, 3, 1, 5, 'Assembly', 'completed', 22.00, 180.00, 12.00, 5.80, 3.10, 39.0000, 1.0000, '2026-03-08 15:50:00');
+
+-- =========================================================
+-- QUALITY INSPECTIONS
+-- =========================================================
+
+INSERT INTO fact_quality_inspection
+(
+    inspection_id, inspection_ts, date_key, plant_key, product_key, supplier_key,
+    production_order_id, batch_number, inspection_type, defect_code, defect_description,
+    inspected_quantity, accepted_quantity, rejected_quantity, reworked_quantity, inspection_result
+)
+VALUES
+('INSP_9001', '2026-03-02 12:30:00', 20260302, 2, 1, 1, '', 'ST_20260302_A', 'incoming', 'DEF_SURF', 'Surface defect on steel sheet', 2500.0000, 2450.0000, 50.0000, 0.0000, 'fail'),
+('INSP_9002', '2026-03-03 15:00:00', 20260303, 1, 3, 2, '', 'MO_20260303_A', 'incoming', 'DEF_ALIGN', 'Motor shaft alignment issue', 120.0000, 115.0000, 5.0000, 0.0000, 'fail'),
+('INSP_9003', '2026-03-04 16:00:00', 20260304, 1, 5, 0, 'PO_7001', 'FGX1_0403', 'final', 'DEF_LEAK', 'Minor pressure leakage detected', 60.0000, 58.0000, 2.0000, 1.0000, 'rework'),
+('INSP_9004', '2026-03-07 17:10:00', 20260307, 1, 6, 0, 'PO_7002', 'FGX2_0703', 'in_process', 'DEF_WELD', 'Weld porosity observed', 35.0000, 32.0000, 3.0000, 2.0000, 'rework'),
+('INSP_9005', '2026-03-08 18:10:00', 20260308, 1, 5, 0, 'PO_7003', 'FGX1_0803', 'final', 'DEF_PAINT', 'Paint finish inconsistency', 40.0000, 39.0000, 1.0000, 0.0000, 'pass');
+
+-- =========================================================
+-- SHIPMENTS
+-- =========================================================
+
+INSERT INTO fact_shipment
+(
+    shipment_id, shipment_ts, date_key, customer_key, plant_key, warehouse_key,
+    product_key, sales_order_number, sales_order_line, batch_number,
+    shipped_quantity, shipment_uom, net_sales_amount, freight_amount
+)
+VALUES
+('SHIP_3001', '2026-03-05 10:30:00', 20260305, 1, 1, 3, 5, 'SO_8001', 1, 'FGX1_0403', 20.0000, 'EA', 52000.0000, 2400.0000),
+('SHIP_3002', '2026-03-06 15:20:00', 20260306, 2, 1, 3, 5, 'SO_8002', 1, 'FGX1_0403', 15.0000, 'EA', 39000.0000, 1800.0000),
+('SHIP_3003', '2026-03-08 11:45:00', 20260308, 3, 1, 3, 6, 'SO_8003', 1, 'FGX2_0803', 10.0000, 'EA', 29500.0000, 1450.0000);
+
