@@ -1,0 +1,180 @@
+CREATE DATABASE IF NOT EXISTS manufacturing_simple;
+
+USE manufacturing_simple;
+
+CREATE TABLE plants
+(
+    plant_id UInt32,
+    plant_name String,
+    city String,
+    country String,
+    is_active UInt8
+)
+ENGINE = MergeTree()
+ORDER BY plant_id;
+
+CREATE TABLE products
+(
+    product_id UInt32,
+    product_name String,
+    product_type String,
+    unit_price Float64,
+    is_active UInt8
+)
+ENGINE = MergeTree()
+ORDER BY product_id;
+
+CREATE TABLE inventory
+(
+    inventory_id UInt32,
+    plant_id UInt32,
+    product_id UInt32,
+    quantity_on_hand Float64,
+    snapshot_date Date
+)
+ENGINE = MergeTree()
+ORDER BY inventory_id;
+
+CREATE TABLE production
+(
+    production_id UInt32,
+    plant_id UInt32,
+    product_id UInt32,
+    produced_qty Float64,
+    production_date Date
+)
+ENGINE = MergeTree()
+ORDER BY production_id;
+
+CREATE TABLE shipments
+(
+    shipment_id UInt32,
+    plant_id UInt32,
+    product_id UInt32,
+    shipped_qty Float64,
+    shipment_date Date
+)
+ENGINE = MergeTree()
+ORDER BY shipment_id;
+
+
+
+
+USE manufacturing_simple;
+
+INSERT INTO plants VALUES
+(1, 'Indore Plant', 'Indore', 'India', 1),
+(2, 'Pune Plant', 'Pune', 'India', 1);
+
+INSERT INTO products VALUES
+(1, 'Pump X1', 'finished_good', 2500, 1),
+(2, 'Pump X2', 'finished_good', 3200, 1),
+(3, 'Motor A', 'component', 800, 1);
+
+INSERT INTO inventory VALUES
+(1, 1, 1, 120, '2026-03-01'),
+(2, 1, 2, 80, '2026-03-01'),
+(3, 2, 3, 200, '2026-03-01');
+
+INSERT INTO production VALUES
+(1, 1, 1, 50, '2026-03-02'),
+(2, 1, 2, 30, '2026-03-02'),
+(3, 2, 3, 100, '2026-03-02');
+
+INSERT INTO shipments VALUES
+(1, 1, 1, 20, '2026-03-03'),
+(2, 1, 2, 10, '2026-03-03'),
+(3, 2, 3, 40, '2026-03-03');
+
+
+ALTER TABLE manufacturing_simple.plants
+MODIFY COMMENT 'Master table containing all manufacturing plant locations';
+
+ALTER TABLE manufacturing_simple.products
+MODIFY COMMENT 'Product master data describing manufactured or purchased items';
+
+ALTER TABLE manufacturing_simple.inventory
+MODIFY COMMENT 'Inventory snapshot showing product quantities available at each plant';
+
+ALTER TABLE manufacturing_simple.production
+MODIFY COMMENT 'Production records tracking quantities of products manufactured at plants';
+
+ALTER TABLE manufacturing_simple.shipments
+MODIFY COMMENT 'Shipment records showing quantities of products shipped from plants';
+
+
+ALTER TABLE manufacturing_simple.plants
+MODIFY COLUMN plant_id UInt32 COMMENT 'Unique identifier for a manufacturing plant';
+
+ALTER TABLE manufacturing_simple.plants
+MODIFY COLUMN plant_name String COMMENT 'Name of the manufacturing plant';
+
+ALTER TABLE manufacturing_simple.plants
+MODIFY COLUMN city String COMMENT 'City where the plant is located';
+
+ALTER TABLE manufacturing_simple.plants
+MODIFY COLUMN country String COMMENT 'Country where the plant operates';
+
+ALTER TABLE manufacturing_simple.plants
+MODIFY COLUMN is_active UInt8 COMMENT 'Flag indicating if plant is active';
+
+
+ALTER TABLE manufacturing_simple.products
+MODIFY COLUMN product_id UInt32 COMMENT 'Unique identifier for product';
+
+ALTER TABLE manufacturing_simple.products
+MODIFY COLUMN product_name String COMMENT 'Name of the product';
+
+ALTER TABLE manufacturing_simple.products
+MODIFY COLUMN product_type String COMMENT 'Type of product such as finished_good or component';
+
+ALTER TABLE manufacturing_simple.products
+MODIFY COLUMN unit_price Float64 COMMENT 'Standard selling price of the product';
+
+ALTER TABLE manufacturing_simple.products
+MODIFY COLUMN is_active UInt8 COMMENT 'Flag indicating if product is active';
+
+ALTER TABLE manufacturing_simple.inventory
+MODIFY COLUMN inventory_id UInt32 COMMENT 'Unique identifier for inventory record';
+
+ALTER TABLE manufacturing_simple.inventory
+MODIFY COLUMN plant_id UInt32 COMMENT 'Plant where inventory is stored';
+
+ALTER TABLE manufacturing_simple.inventory
+MODIFY COLUMN product_id UInt32 COMMENT 'Product stored in inventory';
+
+ALTER TABLE manufacturing_simple.inventory
+MODIFY COLUMN quantity_on_hand Float64 COMMENT 'Available quantity of the product';
+
+ALTER TABLE manufacturing_simple.inventory
+MODIFY COLUMN snapshot_date Date COMMENT 'Date when inventory was recorded';
+
+ALTER TABLE manufacturing_simple.production
+MODIFY COLUMN production_id UInt32 COMMENT 'Unique identifier for production record';
+
+ALTER TABLE manufacturing_simple.production
+MODIFY COLUMN plant_id UInt32 COMMENT 'Plant where product was manufactured';
+
+ALTER TABLE manufacturing_simple.production
+MODIFY COLUMN product_id UInt32 COMMENT 'Product produced';
+
+ALTER TABLE manufacturing_simple.production
+MODIFY COLUMN produced_qty Float64 COMMENT 'Quantity produced';
+
+ALTER TABLE manufacturing_simple.production
+MODIFY COLUMN production_date Date COMMENT 'Date of production';
+
+ALTER TABLE manufacturing_simple.shipments
+MODIFY COLUMN shipment_id UInt32 COMMENT 'Unique identifier for shipment record';
+
+ALTER TABLE manufacturing_simple.shipments
+MODIFY COLUMN plant_id UInt32 COMMENT 'Plant from which product was shipped';
+
+ALTER TABLE manufacturing_simple.shipments
+MODIFY COLUMN product_id UInt32 COMMENT 'Product shipped to customer';
+
+ALTER TABLE manufacturing_simple.shipments
+MODIFY COLUMN shipped_qty Float64 COMMENT 'Quantity shipped';
+
+ALTER TABLE manufacturing_simple.shipments
+MODIFY COLUMN shipment_date Date COMMENT 'Date when shipment occurred';
